@@ -1,7 +1,7 @@
 {
     "cmake.buildDirectory": "${workspaceFolder}/bin",
     "cmake.configureArgs": [
-        "-DCMAKE_TOOLCHAIN_FILE=./deps/clang.toolchain.cmake"
+        "-DCMAKE_TOOLCHAIN_FILE=${workspaceFolder}/deps/clang-p2996-x86_64-unknown-linux-gnu/cmake/clang.toolchain.cmake"
     ],
     "C_Cpp.intelliSenseEngine": "disabled",
     "clangd.path": "${workspaceFolder}/deps/clang-p2996-x86_64-unknown-linux-gnu/bin/clangd",

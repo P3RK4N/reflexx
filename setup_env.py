@@ -3,7 +3,7 @@ import subprocess
 import tarfile
 from pathlib import Path
 
-REPO = "P3RK4N/crializr"
+REPO = "P3RK4N/reflexx"
 TAG = "v0.1"
 FILENAME = "clang-p2996-x86_64-unknown-linux-gnu.tar.gz"
 OUT_FILENAME = "clang-p2996-x86_64-unknown-linux-gnu"

@@ -77,9 +77,19 @@ static constexpr bool ignore_non_serializable_type_category_v =
 
 template <serializer_settings Settings, std::meta::info MemberInfo>
 requires (std::meta::is_nonstatic_data_member(MemberInfo))
-static constexpr bool should_handle_member_v =
+static constexpr bool should_handle_member_r_v =
     !ignore_non_serializable_type_category_v<Settings> ||
     !util::is_non_serializable_category_type_v<typename[: std::meta::type_of(MemberInfo) :]>;
+
+template <serializer_settings Settings, std::meta::info MemberInfo>
+requires (std::meta::is_nonstatic_data_member(MemberInfo))
+static constexpr bool should_handle_member_rw_v =
+    !ignore_non_serializable_type_category_v<Settings> ||
+    !(
+        util::is_non_serializable_category_type_v<typename[: std::meta::type_of(MemberInfo) :]> ||
+        std::meta::is_const_type(std::meta::type_of(MemberInfo))
+    );
+
 
 } // reflexx
 

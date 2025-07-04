@@ -2,6 +2,8 @@
 #include <experimental/meta>
 #include <print>
 
+#include <catch2/catch_all.hpp>
+
 #include "serializer_settings.hpp"
 #include "serializer.hpp"
 #include "backends/placeholder.hpp"
@@ -21,8 +23,15 @@ using s = reflexx::serializer<settings, reflexx::backends::YyjsonBackend>;
 // Constexpr friendly
 using cxs = reflexx::serializer<settings, reflexx::backends::placeholder_backend>;
 
-int main()
-{
-    auto res = s::serialize(std::vector<int>{ 1, 2, 3, 4, 5 });
-    pprint(res.get());
+TEST_CASE( "Playground", "[MISC]" ) {
+
+    struct aa
+    {
+        int a = 2;
+        const int b = 3;
+    };
+
+    // pprint(s::serialize(aa{}).get());
+    s::deserialize(aa{});
+
 }

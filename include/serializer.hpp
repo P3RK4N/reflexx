@@ -331,7 +331,7 @@ private:
         {
             using TMember = [: std::meta::type_of(member_info) :];
 
-            if constexpr (should_handle_member_v<SerializerSettings, member_info>)
+            if constexpr (should_handle_member_r_v<SerializerSettings, member_info>)
             {
                 ctx.backend_->write_key(std::meta::identifier_of(member_info));
                 serialize(obj.[: member_info :], ctx);
@@ -355,7 +355,7 @@ private:
 
         template for (constexpr auto& member_info : std::define_static_array(std::meta::nonstatic_data_members_of(^^T, std::meta::access_context::unchecked())))
         {
-            if constexpr (should_handle_member_v<SerializerSettings, member_info>)
+            if constexpr (should_handle_member_rw_v<SerializerSettings, member_info>)
             {
                 ctx.backend_->read_key(std::meta::identifier_of(member_info));
                 deserialize(obj.[: member_info :], ctx);

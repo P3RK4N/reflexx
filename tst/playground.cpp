@@ -4,10 +4,10 @@
 
 #include <catch2/catch_all.hpp>
 
-#include "serializer_settings.hpp"
-#include "serializer.hpp"
-#include "backends/placeholder.hpp"
-#include "backends/yyjson_backend.hpp"
+#include "reflexx/serializer_settings.hpp"
+#include "reflexx/serializer.hpp"
+#include "reflexx/backends/placeholder.hpp"
+#include "reflexx/backends/yyjson_backend.hpp"
 
 template <typename... Ts>
 void pprint(const Ts&... items)
@@ -16,7 +16,7 @@ void pprint(const Ts&... items)
     std::println();
 }
 
-constexpr auto settings = reflexx::serializer_settings::Relaxed();
+constexpr auto settings = reflexx::serializer_settings::Strict();
 
 // Runtime only
 using s = reflexx::serializer<settings, reflexx::backends::YyjsonBackend>;
@@ -27,11 +27,12 @@ TEST_CASE( "Playground", "[MISC]" ) {
 
     struct aa
     {
-        int a = 2;
+        int& a;
         const int b = 3;
     };
-
-    // pprint(s::serialize(aa{}).get());
-    s::deserialize(aa{});
+    int a = 2;
+    aa deser { a };
+    pprint(s::serialize(aa{a}).get());
+    s::deserialize(deser, s::serialize(aa{a}).get());
 
 }

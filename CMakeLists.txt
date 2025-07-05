@@ -58,7 +58,7 @@ if (REFLEXX_ENABLE_JSON OR TARGET yyjson)
         )
     endif()
     list(APPEND REFLEXX_BACKEND_LIBS yyjson)
-    list(APPEND REFLEXX_BACKEND_SOURCES "${CMAKE_CURRENT_LIST_DIR}/include/backends/yyjson_backend.hpp")
+    list(APPEND REFLEXX_BACKEND_SOURCES "${CMAKE_CURRENT_LIST_DIR}/include/reflexx/backends/yyjson_backend.hpp")
 endif()
 
 add_library(reflexx INTERFACE "${REFLEXX_BACKEND_SOURCES}")

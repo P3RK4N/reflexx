@@ -1,39 +1,35 @@
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/reflexx/try_compile_bin/")
+
 function(reflexx_add_compile_test)
-  set(options REFLEXX_SHOULD_FAIL)
-  set(oneValueArgs REFLEXX_NAME REFLEXX_SOURCE REFLEXX_TOOLCHAIN_FILE)
-  cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "" ${ARGN})
+  set(options SHOULD_FAIL)
+  set(oneValueArgs NAME SOURCE_FILE TOOLCHAIN_FILE)
+  set(multiValueArgs INCLUDE_DIRS)
+  cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  if(NOT ARG_REFLEXX_NAME)
-    message(FATAL_ERROR "reflexx_run_compile_test requires NAME argument")
+  if(NOT ARG_SOURCE_FILE)
+    message(FATAL_ERROR "reflexx_add_compile_test requires ARG_SOURCE_FILE argument")
   endif()
 
-  if(NOT ARG_REFLEXX_SOURCE)
-    message(FATAL_ERROR "reflexx_run_compile_test requires SOURCE argument")
+  # Set default name from SOURCE_FILE if ARG_NAME is not provided
+  if(NOT ARG_NAME)
+    get_filename_component(ARG_NAME "${ARG_SOURCE_FILE}" NAME_WE)
   endif()
-
-  # Create source output directory
-  set(reflexx_test_dir "${CMAKE_BINARY_DIR}/reflexx/try_compile_sources")
-  file(MAKE_DIRECTORY "${reflexx_test_dir}")
-
-  # Write source file
-  set(source_file "${reflexx_test_dir}/${ARG_REFLEXX_NAME}.cpp")
-  file(WRITE "${source_file}" "${ARG_REFLEXX_SOURCE}")
-
-  # Create build dir for this specific test
-  set(build_dir "${CMAKE_BINARY_DIR}/reflexx/try_compile_bin/")
-  file(MAKE_DIRECTORY "${build_dir}")
 
   # Prepare arguments to CMake script
   set(cmd "${CMAKE_COMMAND}")
-  list(APPEND cmd "-DREFLEXX_SOURCE_FILE=${source_file}")
-  list(APPEND cmd "-DREFLEXX_SHOULD_FAIL=${ARG_REFLEXX_SHOULD_FAIL}")
-  if(ARG_REFLEXX_TOOLCHAIN_FILE)
-    list(APPEND cmd "-DCMAKE_TOOLCHAIN_FILE=${ARG_REFLEXX_TOOLCHAIN_FILE}")
+  list(APPEND cmd "-DREFLEXX_SOURCE_FILE=${ARG_SOURCE_FILE}")
+  list(APPEND cmd "-DREFLEXX_SHOULD_FAIL=${ARG_SHOULD_FAIL}")
+  if(ARG_TOOLCHAIN_FILE)
+    list(APPEND cmd "-DCMAKE_TOOLCHAIN_FILE=${ARG_TOOLCHAIN_FILE}")
   endif()
-  list(APPEND cmd "-S ${PROJECT_SOURCE_DIR}/cmake/compile_test")
-  list(APPEND cmd "-B ${build_dir}")
+  if(ARG_INCLUDE_DIRS)
+    string(REPLACE ";" "\\;" ARG_INCLUDE_DIRS_ESCAPED "${ARG_INCLUDE_DIRS}")
+    list(APPEND cmd "-DREFLEXX_INCLUDE_DIRS=${ARG_INCLUDE_DIRS_ESCAPED}")
+  endif()
+  list(APPEND cmd "-S ${reflexx_project_SOURCE_DIR}/cmake/compile_test")
+  list(APPEND cmd "${CMAKE_BINARY_DIR}/reflexx/try_compile_bin/")
 
   # Test
-  add_test(NAME "${ARG_REFLEXX_NAME}" COMMAND ${cmd})
+  add_test(NAME "${ARG_NAME}" COMMAND ${cmd})
 
 endfunction()

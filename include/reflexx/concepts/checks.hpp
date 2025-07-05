@@ -1,8 +1,8 @@
 #ifndef REFLEXX_CHECKS_HPP
 #define REFLEXX_CHECKS_HPP
 
-#include "serializer_settings.hpp"
-#include "util/class_util.hpp"
+#include "reflexx/serializer_settings.hpp"
+#include "reflexx/util/class_util.hpp"
 
 namespace reflexx {
 namespace concepts {

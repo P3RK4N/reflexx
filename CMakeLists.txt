@@ -25,10 +25,9 @@
 # ----------------------------------------------
 
 cmake_minimum_required(VERSION 3.20)
-project(MyProject CXX)
+project(reflexx_project CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-include(reflexx)
 
 if (NOT COMMAND FetchContent_Declare)
     include(FetchContent)

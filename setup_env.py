@@ -6,7 +6,6 @@ from pathlib import Path
 REPO = "P3RK4N/reflexx"
 TAG = "v0.1"
 FILENAME = "clang-p2996-x86_64-unknown-linux-gnu.tar.gz"
-OUT_FILENAME = "clang-p2996-x86_64-unknown-linux-gnu"
 DEST_DIR = Path("deps")
 
 def download_with_gh():
@@ -29,7 +28,7 @@ def main():
     archive_path = DEST_DIR / FILENAME
 
     download_with_gh()
-    extract_tar_gz(archive_path, DEST_DIR / OUT_FILENAME)
+    extract_tar_gz(archive_path, DEST_DIR)
     archive_path.unlink()  # delete archive
     print(f"Deleted archive: {archive_path}")
 

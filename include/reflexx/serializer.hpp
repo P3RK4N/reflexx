@@ -9,7 +9,6 @@
 #include <utility>
 #include <vector>
 
-#include "custom_type_serializer.hpp"
 #include "concepts/checks.hpp"
 #include "concepts/backend.hpp"
 #include "serializer_settings.hpp"
@@ -90,8 +89,6 @@ public:
     ############################## Internal #################################    
     #########################################################################
 */
-
-friend class custom_type_serializer<serializer>;
 
 private:
     template <typename T>

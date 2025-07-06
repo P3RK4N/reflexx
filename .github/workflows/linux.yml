@@ -1,0 +1,41 @@
+name: Linux Build & Test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ninja-build python3 cmake lld
+
+    - name: Run setup script
+      run: python3 setup_env.py
+
+    - name: Configure CMake (Ninja Multi-Config)
+      run: |
+        cmake -G "Ninja Multi-Config" \
+              -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/deps/clang-p2996-x86_64-unknown-linux-gnu/cmake/clang.toolchain.cmake" \
+              -B "${{ github.workspace }}/bin" \
+              -S "${{ github.workspace }}"
+
+    - name: Build reflexx target (Debug)
+      run: cmake --build "${{ github.workspace }}/bin" --config Debug --target reflexx
+
+    - name: Build reflexx_runtime_tests target (Debug)
+      run: cmake --build "${{ github.workspace }}/bin" --config Debug --target reflexx_runtime_tests
+
+    - name: Run CTest (Debug)
+      working-directory: "${{ github.workspace }}/bin/tst"
+      run: ctest --output-on-failure -C Debug

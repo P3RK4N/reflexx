@@ -25,14 +25,4 @@ using cxs = reflexx::serializer<settings, reflexx::backends::placeholder_backend
 
 TEST_CASE( "Playground", "[MISC]" ) {
 
-    struct aa
-    {
-        int& a;
-        const int b = 3;
-    };
-    int a = 2;
-    aa deser { a };
-    pprint(s::serialize(aa{a}).get());
-    s::deserialize(deser, s::serialize(aa{a}).get());
-
 }

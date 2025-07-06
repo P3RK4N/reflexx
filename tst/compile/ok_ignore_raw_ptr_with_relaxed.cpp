@@ -1,10 +1,8 @@
-#include <reflexx/serializer.hpp>
-#include <reflexx/backends/placeholder.hpp>
-
-using MyBackend = reflexx::backends::placeholder_backend;
+#include "compile_util.hpp"
 
 struct Allowed {
     int* ignored;
 };
 
-auto _ = reflexx::serializer<reflexx::serializer_settings::Relaxed(), MyBackend>::serialize(Allowed{});
+auto _ = RelaxedSerializer::serialize(Allowed{});
+auto __ = []{ Allowed a; RelaxedSerializer::deserialize(a, ""); };

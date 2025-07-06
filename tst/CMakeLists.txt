@@ -4,7 +4,7 @@ if (NOT TARGET Catch2::Catch2WithMain)
         GITHUB_REPOSITORY catchorg/Catch2
         GIT_TAG v3.8.1
     )
-    endif()
+endif()
 
 include(CTest)
 enable_testing()
@@ -32,7 +32,7 @@ set(REFLEXX_COMPILE_TESTS
     tst/compile/ok_basic_struct.cpp
     tst/compile/ok_nested_struct.cpp
     tst/compile/fail_raw_pointer.cpp
-    tst/compile/fail_deserialize_reference_member.cpp
+    tst/compile/fail_reference_member.cpp
     tst/compile/ok_enum_integral.cpp
     tst/compile/fail_union.cpp
     tst/compile/fail_function_ptr.cpp

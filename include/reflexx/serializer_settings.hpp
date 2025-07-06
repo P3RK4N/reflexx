@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <experimental/meta>
+#include <type_traits>
 
 #include "policies.hpp"
 #include "util/non_serializable_category_type.hpp"
@@ -40,8 +41,8 @@ struct serializer_settings final
     {
         serializer_settings settings;
 
-        settings.enum_format_policy_                            = enum_format_policy::integral;
-        settings.ignore_non_serializable_type_category_members_ = false;
+        settings.enum_format_policy_                = enum_format_policy::integral;
+        settings.ignore_non_serializable_members_   = false;
 
         return settings; 
     }
@@ -50,15 +51,15 @@ struct serializer_settings final
     {
         serializer_settings settings;
 
-        settings.enum_format_policy_                            = enum_format_policy::string;
-        settings.ignore_non_serializable_type_category_members_ = true;
+        settings.enum_format_policy_                = enum_format_policy::string;
+        settings.ignore_non_serializable_members_   = true;
 
         return settings;
     }
 
     DECLARE_POLICY(enum_format_policy);
     
-    DECLARE_PROPERTY(bool, ignore_non_serializable_type_category_members);
+    DECLARE_PROPERTY(bool, ignore_non_serializable_members);
 
 private:
     consteval serializer_settings() = default;
@@ -72,14 +73,22 @@ static constexpr bool format_enum_as_string_v =
     Settings.enum_format_policy_ == policies::enum_format_policy::string;
 
 template <serializer_settings Settings>
-static constexpr bool ignore_non_serializable_type_category_v =
-    Settings.ignore_non_serializable_type_category_members_;
+static constexpr bool ignore_non_serializable_members_v =
+    Settings.ignore_non_serializable_members_;
 
+/*
+    If we are not ignoring anything, we should definitively try to handle member.
+    Otherwise, if we ignore non serializable members, we will handle only
+    those that are not const and not non-serializable members.
+*/
 template <serializer_settings Settings, std::meta::info MemberInfo>
 requires (std::meta::is_nonstatic_data_member(MemberInfo))
 static constexpr bool should_handle_member_v =
-    !ignore_non_serializable_type_category_v<Settings> ||
-    !util::is_non_serializable_category_type_v<typename[: std::meta::type_of(MemberInfo) :]>;
+    !ignore_non_serializable_members_v<Settings> ||
+    (
+        !util::is_non_serializable_category_type_v<typename[: std::meta::type_of(MemberInfo) :]> &&
+        !std::is_const_v<typename[: std::meta::type_of(MemberInfo) :]>
+    );
 
 
 } // reflexx

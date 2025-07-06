@@ -1,11 +1,9 @@
-#include <reflexx/serializer.hpp>
-#include <reflexx/backends/placeholder.hpp>
-
-using MyBackend = reflexx::backends::placeholder_backend;
+#include "compile_util.hpp"
 
 struct Person {
     std::string name;
     int age;
 };
 
-auto _ = reflexx::serializer<reflexx::serializer_settings::Strict(), MyBackend>::serialize(Person{"Ana", 23});
+auto _ = StrictSerializer::serialize(Person{"Ana", 23});
+auto __ = []{ Person p{"", 0}; StrictSerializer::deserialize(p, ""); };

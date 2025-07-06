@@ -1,7 +1,4 @@
-#include <reflexx/serializer.hpp>
-#include <reflexx/backends/placeholder.hpp>
-
-using MyBackend = reflexx::backends::placeholder_backend;
+#include "compile_util.hpp"
 
 union BadUnion {
     int a;
@@ -12,4 +9,5 @@ struct Wrapper {
     BadUnion u;
 };
 
-auto _ = reflexx::serializer<reflexx::serializer_settings::Strict(), MyBackend>::serialize(Wrapper{});
+auto _ = StrictSerializer::serialize(Wrapper{});
+auto __ = []{ Wrapper w{}; StrictSerializer::deserialize(w, ""); };

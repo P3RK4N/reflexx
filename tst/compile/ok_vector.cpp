@@ -1,11 +1,8 @@
-#include <reflexx/serializer.hpp>
-#include <vector>
-#include <reflexx/backends/placeholder.hpp>
-
-using MyBackend = reflexx::backends::placeholder_backend;
+#include "compile_util.hpp"
 
 struct Container {
     std::vector<int> numbers;
 };
 
-auto _ = reflexx::serializer<reflexx::serializer_settings::Strict(), MyBackend>::serialize(Container{});
+auto _ = StrictSerializer::serialize(Container{});
+auto __ = []{ Container c; StrictSerializer::deserialize(c, ""); };

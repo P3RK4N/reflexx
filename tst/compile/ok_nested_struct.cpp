@@ -1,7 +1,4 @@
-#include <reflexx/serializer.hpp>
-#include <reflexx/backends/placeholder.hpp>
-
-using MyBackend = reflexx::backends::placeholder_backend;
+#include "compile_util.hpp"
 
 struct Address {
     std::string city;
@@ -11,4 +8,5 @@ struct Person {
     Address address;
 };
 
-auto _ = reflexx::serializer<reflexx::serializer_settings::Strict(), MyBackend>::serialize(Person{});
+auto _ = StrictSerializer::serialize(Person{});
+auto __ = []{ Person p; StrictSerializer::deserialize(p, ""); };

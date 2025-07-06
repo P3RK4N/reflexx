@@ -1,7 +1,4 @@
-#include <reflexx/serializer.hpp>
-#include <reflexx/backends/placeholder.hpp>
-
-using MyBackend = reflexx::backends::placeholder_backend;
+#include "compile_util.hpp"
 
 enum class Status { OK, Error };
 
@@ -9,4 +6,5 @@ struct Result {
     Status status;
 };
 
-auto _ = reflexx::serializer<reflexx::serializer_settings::Relaxed(), MyBackend>::serialize(Result{});
+auto _ = RelaxedSerializer::serialize(Result{});
+auto __ = []{ Result r; RelaxedSerializer::deserialize(r, ""); };

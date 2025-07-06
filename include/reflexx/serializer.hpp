@@ -117,6 +117,32 @@ private:
         );
     }
 
+    template <std::meta::info MemberInfo>
+    requires (std::meta::is_nonstatic_data_member(MemberInfo))
+    static void assert_member_type()
+    {
+        using TMember = typename[: std::meta::type_of(MemberInfo) :];
+
+        static_assert
+        (
+            !std::is_const_v<TMember> && !std::is_reference_v<TMember>,
+            "\n\n\n"
+            "##########################################################\n"
+            "################## ˇSERIALIZATION ERRORˇ #################\n"
+            "##########################################################\n"
+            "\n\n"
+            "Nonstatic data members cannot be const or reference types!\n" 
+            "Consider writing custom serializer for it.\n"
+            "Note that deserialization into const types is undefined\n"
+            "behaviour.\n"
+            "\n\n"
+            "##########################################################\n"
+            "################## ^SERIALIZATION ERROR^ #################\n"
+            "##########################################################\n"
+            "\n\n\n"
+        );
+    }
+
 private:
     serializer()                                = delete;
     serializer(const serializer&)               = delete;
@@ -334,6 +360,7 @@ private:
 
             if constexpr (should_handle_member_v<SerializerSettings, member_info>)
             {
+                assert_member_type<member_info>();
                 ctx.backend_->write_key(std::meta::identifier_of(member_info));
                 serialize(obj.[: member_info :], ctx);
             }
@@ -360,9 +387,7 @@ private:
 
             if constexpr (should_handle_member_v<SerializerSettings, member_info>)
             {
-                static_assert(std::is_reference_v<TMember>, "Cannot deserialize into reference type member!");
-                static_assert(std::is_const_v<TMember>, "Cannot deserialize into const type member!");
-
+                assert_member_type<member_info>();
                 ctx.backend_->read_key(std::meta::identifier_of(member_info));
                 deserialize(obj.[: member_info :], ctx);
             }

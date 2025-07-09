@@ -13,7 +13,8 @@ list(APPEND CMAKE_MODULE_PATH "${catch2_SOURCE_DIR}/extras")
 include(Catch)
 
 add_executable(reflexx_runtime_tests
-    "playground.cpp" 
+    "playground.cpp"
+    "complex.cpp"
     "runtime/util/class_util_test.cpp"
     "runtime/util/enum_conv_test.cpp"
     "runtime/util/non_serializable_category_type_test.cpp"

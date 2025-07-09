@@ -40,15 +40,25 @@ concept IsBackendType =
 
         // Constructible for read mode
         T { input };
-        // TODO: Add RAII input stream
+
+        // TODO: Maybe add RAII input stream
+        // NOTE: Reading big files, which would require SAX style api, would need input stream
+        //  On the other hand, the only way of writing big files would still need to be done via
+        //  serialization of a single object type. If the object is too big to be placed in memory,
+        //  there are 2 options:
+        //      - Dont serialize it, because its impossible (you cannot allocate space for it)
+        //      - Serialize it via lazy/paginated object type
+
 
         // Mode method
         { backend.is_reading()          } -> std::same_as<bool>;
 
         // Output method
+        // Defined behaviour only after well formed writing
         { backend.get()                 } -> std::same_as<std::string_view>;
 
         // Writing methods
+        // Defined behaviour only when initialized for writing
         { backend.write_key(sv)         } -> std::same_as<void>;
         { backend.write_begin_array()   } -> std::same_as<void>;
         { backend.write_end_array()     } -> std::same_as<void>;
@@ -69,6 +79,7 @@ concept IsBackendType =
         { backend.write_null()          } -> std::same_as<void>;
 
         // Read methods
+        // Defined behviour only when initialized for reading
         { backend.read_key(sv)          } -> std::same_as<void>;
         { backend.read_begin_array()    } -> std::same_as<void>;
         { backend.read_end_array()      } -> std::same_as<void>;

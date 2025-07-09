@@ -5,8 +5,8 @@
 #include <experimental/meta>
 #include <type_traits>
 
-#include "policies.hpp"
-#include "util/non_serializable_category_type.hpp"
+#include "reflexx/policies.hpp"
+#include "reflexx/util/non_serializable_category_type.hpp"
 
 namespace reflexx
 {

@@ -3,15 +3,31 @@
 
 #include <experimental/meta>
 
-#include "reflexx/concepts/checks.hpp"
-#include "reflexx/custom_type_handler.hpp"
+#include "reflexx/util/class_util.hpp"
+#include "reflexx/type_handler.hpp"
 
 namespace reflexx {
+namespace checks {
 
-using namespace ::reflexx::concepts;
+template <typename T>
+concept AmbiguousMemberCheck =
+    !::reflexx::util::has_ambigous_non_static_data_members_v<T>;
+
+template <typename T>
+concept VirtualBaseClassCheck =
+    !::reflexx::util::has_virtual_base_v<T>;
+
+template <serializer_settings Settings, typename T>
+concept ValidationCheck =
+    AmbiguousMemberCheck<T> &&
+    VirtualBaseClassCheck<T>;
+
+} // checks
+
+using namespace checks;
 
 template <typename TSerializer, bool IsReading>
-struct default_type_handler : custom_type_handler<TSerializer, IsReading>
+struct default_handler : type_handler<TSerializer, IsReading>
 {
     template <typename T>
     void serialize(T& obj)

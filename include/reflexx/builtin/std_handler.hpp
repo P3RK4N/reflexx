@@ -3,12 +3,12 @@
 
 #include <string>
 
-#include "reflexx/custom_type_handler.hpp"
+#include "reflexx/type_handler.hpp"
 
 namespace reflexx {
 
 template <typename TSerializer, bool IsReading>
-struct std_type_handler : custom_type_handler<TSerializer, IsReading>
+struct std_handler : type_handler<TSerializer, IsReading>
 {    
     void serialize(std::string& v)
     {

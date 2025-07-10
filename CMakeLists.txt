@@ -37,7 +37,7 @@ if (NOT COMMAND CPMAddPackage)
     FetchContent_Declare(
         CPM
         GIT_REPOSITORY https://github.com/cpm-cmake/CPM.cmake.git
-        GIT_TAG v0.40.8
+        GIT_TAG v0.42.0
     )
     FetchContent_MakeAvailable(CPM)
 endif()

@@ -1,5 +1,5 @@
-#ifndef REFLEXX_CUSTOM_TYPE_SERIALIZER_HPP
-#define REFLEXX_CUSTOM_TYPE_SERIALIZER_HPP
+#ifndef REFLEXX_TYPE_HANDLER_HPP
+#define REFLEXX_TYPE_HANDLER_HPP
 
 #include <string_view>
 
@@ -11,7 +11,7 @@ namespace reflexx
 {
 
 template <IsSerializer TSerializer, bool IsReading>
-class custom_type_handler
+class type_handler
 {
 private:
     friend TSerializer;
@@ -21,15 +21,13 @@ private:
     
 protected:
     template <typename T>
-    requires IsReading
-    constexpr inline void serialize_object(T& obj) const 
+    constexpr inline void serialize_object(T& obj) const requires IsReading 
     { 
         TSerializer::deserialize(obj, *__ctx__);
     }
 
     template <typename T>
-    requires IsWriting
-    constexpr inline void serialize_object(const T& obj) const 
+    constexpr inline void serialize_object(const T& obj) const requires IsWriting
     { 
         TSerializer::serialize(obj, *__ctx__);
     }
@@ -94,37 +92,29 @@ protected:
         }
     }
 
-    template <typename = void>
-    requires IsReading
-    constexpr inline void serialize_bool(bool& v) const 
+    constexpr inline void serialize_bool(bool& v) const requires IsReading 
     { 
         __ctx__->backend_->read_bool(v);
     }
 
-    template <typename = void>
-    requires IsWriting
-    constexpr inline void serialize_bool(bool v) const 
+    constexpr inline void serialize_bool(bool v) const requires IsWriting
     { 
         __ctx__->backend_->write_bool(v);
     }
 
-    template <typename = void>
-    requires IsReading
-    constexpr inline void serialize_string(std::string& v) const 
+    constexpr inline void serialize_string(std::string& v) const requires IsReading
     { 
         v = __ctx__->backend_->read_string();
     }
 
-    template <typename = void>
-    requires IsWriting
-    constexpr inline void serialize_string(std::string_view v) const 
+    constexpr inline void serialize_string(std::string_view v) const requires IsWriting 
     { 
         __ctx__->backend_->write_string(v);
     }
     
     template <typename T>
-    requires std::is_arithmetic_v<T> && IsWriting
-    constexpr inline void serialize_number(T value) const
+    requires std::is_arithmetic_v<T>
+    constexpr inline void serialize_number(T value) const requires IsWriting
     {
         if      constexpr (std::is_same_v<T, std::int8_t>)      __ctx__->backend_->write_number(value);
         else if constexpr (std::is_same_v<T, std::int16_t>)     __ctx__->backend_->write_number(value);
@@ -140,8 +130,8 @@ protected:
     }
 
     template <typename T>
-    requires std::is_arithmetic_v<T> && IsReading
-    constexpr inline void serialize_number(T& value) const
+    requires std::is_arithmetic_v<T>
+    constexpr inline void serialize_number(T& value) const requires IsReading
     {
         if      constexpr (std::is_same_v<T, std::int8_t>)      __ctx__->backend_->read_number(value);
         else if constexpr (std::is_same_v<T, std::int16_t>)     __ctx__->backend_->read_number(value);
@@ -175,7 +165,7 @@ protected:
      */
 
     constexpr inline bool is_null() const 
-    { 
+    {
         static_assert(IsReading, "is_null is only callable in Read/Deserialize mode!");
         return __ctx__->backend_->read_is_null();
     }

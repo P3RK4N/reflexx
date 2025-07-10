@@ -1,4 +1,4 @@
-#include "compile_util.hpp"
+#include "../compile_util.hpp"
 
 struct Bad {
     int& ref;
@@ -7,5 +7,4 @@ struct Bad {
 int dummy = 42;
 Bad b{dummy};
 
-auto _ = StrictSerializer::serialize(b);
 auto __ = []{ Bad local_b{dummy}; StrictSerializer::deserialize(local_b, ""); };

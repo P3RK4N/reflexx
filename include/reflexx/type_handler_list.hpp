@@ -1,11 +1,11 @@
-#ifndef REFLEXX_HANDLER_LIST_HPP
-#define REFLEXX_HANDLER_LIST_HPP
+#ifndef REFLEXX_TYPE_HANDLER_LIST_HPP
+#define REFLEXX_TYPE_HANDLER_LIST_HPP
 
 #include <cassert>
 #include <concepts>
 #include <experimental/meta>
 
-#include "reflexx/custom_type_handler.hpp"
+#include "reflexx/type_handler.hpp"
 
 namespace reflexx {
 
@@ -16,38 +16,25 @@ concept HasHandlerFor =
 
 
 template <template <typename, bool> class... Handlers>
-struct handler_list
+struct type_handler_list
 {
 private:
-    template <IsHandlerList HandlerList>
+    template <IsTypeHandlerList TypeHandlerList>
     struct extend_impl;
 
     template <template <typename, bool> class... OtherHandlers>
-    struct extend_impl<handler_list<OtherHandlers...>>
+    struct extend_impl<type_handler_list<OtherHandlers...>>
     {
-        using type = handler_list<Handlers..., OtherHandlers...>;
+        using type = type_handler_list<Handlers..., OtherHandlers...>;
     };
 
     template <typename TSerializer, bool IsReading, typename T>
     static consteval std::meta::info get_first()
     {
         // Go trough all Handlers
-        template for (constexpr auto template_param : std::define_static_array(std::meta::template_arguments_of(^^handler_list)))
+        template for (constexpr auto template_param : std::define_static_array(std::meta::template_arguments_of(^^type_handler_list)))
         {
             using THandler = [: template_param :]<TSerializer, IsReading>;
-            using THandlerBase = custom_type_handler<TSerializer, IsReading>;
-
-            static_assert
-            (
-                std::derived_from<THandler, THandlerBase>, 
-                "Ill-formed type handler encountered. It should derive from custom_type_handler with forwarded template params!"
-            );
-
-            static_assert
-            (
-                std::is_default_constructible_v<THandler>, 
-                "Ill-formed type handler encountered. It should have default constructor!"
-            );
 
             if constexpr (HasHandlerFor<THandler, T>)
             {
@@ -59,11 +46,11 @@ private:
     };
 
 public:
-    template <IsHandlerList HandlerList>
-    using extend = extend_impl<HandlerList>::type;
+    template <IsTypeHandlerList TypeHandlerList>
+    using extend = extend_impl<TypeHandlerList>::type;
 
     template <template <typename, bool> class Handler>
-    using append = handler_list<Handlers..., Handler>;
+    using append = type_handler_list<Handlers..., Handler>;
 
     template <typename TSerializer, bool IsReading, typename T>
     using get_first_t = [: get_first<TSerializer, IsReading, T>() :];

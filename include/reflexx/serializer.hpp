@@ -6,30 +6,29 @@
 #include <string_view>
 #include <type_traits>
 
-#include "reflexx/handler_list.hpp"
-#include "reflexx/serializer_settings.hpp"
 #include "reflexx/declare.hpp"
+
+#include "reflexx/type_handler_list.hpp"
+#include "reflexx/serializer_settings.hpp"
 #include "reflexx/util/non_serializable_category_type.hpp"
 #include "reflexx/util/enum_conv.hpp"
-#include "reflexx/builtin/default_type_handler.hpp"
-#include "reflexx/builtin/std_type_handler.hpp"
+#include "reflexx/builtin/default_handler.hpp"
+#include "reflexx/builtin/std_handler.hpp"
 
 namespace reflexx
 {
-
-using namespace ::reflexx::concepts;
 
 #define REFLEXX_INLINE_CONSTEXPR inline
 
 template <
     serializer_settings SerializerSettings,
     IsBackendType BackendType,
-    IsHandlerList HandlerList = handler_list<std_type_handler, default_type_handler>
+    IsTypeHandlerList TypeHandlerList = type_handler_list<std_handler, default_handler>
 >
 class serializer final
 {
     template <IsSerializer TSerializer, bool IsReading>
-    friend class custom_type_handler;
+    friend class type_handler;
 
     template <typename T>
     static constexpr bool is_serializable_v = 
@@ -99,7 +98,7 @@ public:
     }
 
     static constexpr serializer_settings settings   = SerializerSettings;
-    using handler_list_type                         = HandlerList;
+    using handler_list_type                         = TypeHandlerList;
     using backend_type                              = BackendType;
 
 /*
@@ -114,7 +113,7 @@ private:
     {
         static_assert
         (
-            !is_non_serializable_category_type_v<T>,
+            !::reflexx::util::is_non_serializable_category_type_v<T>,
             "\n\n\n"
             "##########################################################\n"
             "################## ˇSERIALIZATION ERRORˇ #################\n"
@@ -124,6 +123,29 @@ private:
             "unbounded arrays, functions and unions are not supported\n"
             "by default. Consider using smart pointers, vectors and variants!\n"
             "You can also use custom serializers to handle these types.\n"
+            "\n\n"
+            "##########################################################\n"
+            "################## ^SERIALIZATION ERROR^ #################\n"
+            "##########################################################\n"
+            "\n\n\n"
+        );
+    }
+
+    template <typename THandler, bool IsReading>
+    static void static_assert_type_handler()
+    {
+        using THandlerBase = type_handler<serializer, IsReading>;
+
+        static_assert
+        (
+            std::derived_from<THandler, THandlerBase> && std::is_default_constructible_v<THandler>, 
+            "\n\n\n"
+            "##########################################################\n"
+            "################## ˇSERIALIZATION ERRORˇ #################\n"
+            "##########################################################\n"
+            "\n\n"
+            "Handler should derive from type_handler with forwarded\n"
+            "template params and be default constructible!\n"
             "\n\n"
             "##########################################################\n"
             "################## ^SERIALIZATION ERROR^ #################\n"
@@ -154,7 +176,8 @@ private:
     requires std::is_class_v<std::remove_cvref_t<T>>
     static REFLEXX_INLINE_CONSTEXPR void serialize(const T& obj, serializer_context& ctx)
     {
-        using THandler = typename HandlerList::template get_first_t<serializer, /* IsReading */ false, T>;
+        using THandler = typename TypeHandlerList::template get_first_t<serializer, /* IsReading */ false, T>;
+        static_assert_type_handler<THandler, /* IsReading */ false>();
 
         // NOTE: We need to cast constness away due to symmetric read/write api.
         //  Method signature promises constness and that is what user will get at the end. (I promise)
@@ -167,7 +190,8 @@ private:
     requires std::is_class_v<std::remove_cvref_t<T>>
     static REFLEXX_INLINE_CONSTEXPR void deserialize(T& obj, serializer_context& ctx)
     {
-        using THandler = typename HandlerList::template get_first_t<serializer, /* IsReading */ true, T>;
+        using THandler = typename TypeHandlerList::template get_first_t<serializer, /* IsReading */ true, T>;
+        static_assert_type_handler<THandler, /* IsReading */ true>();
 
         auto handler = THandler{};
         handler.__ctx__ = &ctx;
@@ -250,7 +274,7 @@ private:
 
         if constexpr (format_enum_as_string_v<SerializerSettings>)
         {
-            ctx.backend_->write_string(enum_to_string(obj));
+            ctx.backend_->write_string(util::enum_to_string(obj));
         }
         else
         {
@@ -267,7 +291,7 @@ private:
 
         if constexpr (format_enum_as_string_v<SerializerSettings>)
         {
-            obj = string_to_enum<TEnum>(ctx.backend_->read_string());
+            obj = util::string_to_enum<TEnum>(ctx.backend_->read_string());
         }
         else
         {

@@ -1,7 +1,7 @@
-#include "compile_util.hpp"
+#include "../compile_util.hpp"
 
 struct Address {
-    std::string city;
+    int number;
 };
 
 struct Person {

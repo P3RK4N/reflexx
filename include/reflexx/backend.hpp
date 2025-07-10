@@ -6,7 +6,6 @@
 #include <string_view>
 
 namespace reflexx {
-namespace concepts {
 
 template <typename T>
 concept IsBackendType =
@@ -41,14 +40,7 @@ concept IsBackendType =
         // Constructible for read mode
         T { input };
 
-        // TODO: Maybe add RAII input stream
-        // NOTE: Reading big files, which would require SAX style api, would need input stream
-        //  On the other hand, the only way of writing big files would still need to be done via
-        //  serialization of a single object type. If the object is too big to be placed in memory,
-        //  there are 2 options:
-        //      - Dont serialize it, because its impossible (you cannot allocate space for it)
-        //      - Serialize it via lazy/paginated object type
-
+        // TODO: add a another constructor for reading from input stream
 
         // Mode method
         { backend.is_reading()          } -> std::same_as<bool>;
@@ -102,7 +94,6 @@ concept IsBackendType =
         { backend.read_has_next()       } -> std::same_as<bool>;
     };
 
-} // concepts
 } // reflexx
 
 

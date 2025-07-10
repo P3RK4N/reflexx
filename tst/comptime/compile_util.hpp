@@ -1,4 +1,5 @@
 #include <reflexx/serializer.hpp>
+#include <reflexx/type_handler.hpp>
 #include <reflexx/backends/placeholder.hpp>
 
 using MyBackend = reflexx::backends::placeholder_backend;

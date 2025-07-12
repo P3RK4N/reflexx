@@ -7,6 +7,12 @@
 
 namespace reflexx {
 
+// TODO: Ifstream
+// TODO: u8string?
+// TODO: fixed floating types
+// TODO: Allow only fixed types to be (de)serialized?
+// TODO: Read key (iterative mode -> when keys are unknown)
+
 template <typename T>
 concept IsBackendType =
     requires
@@ -15,7 +21,6 @@ concept IsBackendType =
         
         // For read input
         std::span<const char> input,
-        // TODO: Add RAII input stream
 
         // Strings
         std::string str,
@@ -25,32 +30,27 @@ concept IsBackendType =
         bool b,
         std::int8_t i8, std::int16_t i16, std::int32_t i32, std::int64_t i64,
         std::uint8_t u8, std::uint16_t u16, std::uint32_t u32, std::uint64_t u64,
-        float f, double d, // TODO: Switch to fixed point floating types
+        float f, double d,
         
         // For reading
         bool& b_ref,
         std::int8_t& i8_ref, std::int16_t& i16_ref, std::int32_t& i32_ref, std::int64_t& i64_ref,
         std::uint8_t& u8_ref, std::uint16_t& u16_ref, std::uint32_t& u32_ref, std::uint64_t& u64_ref,
-        float& f_ref, double& d_ref // TODO: Switch to fixed point floating types
+        float& f_ref, double& d_ref
     )
     {
-        // Constructible for write mode
-        T {};
+        T {};           /* Constructor for write mode */
+        T { input };    /* Constructor for read mode  */
 
-        // Constructible for read mode
-        T { input };
+        /**
+         *  #################################################################
+         *  #                                                               #
+         *  #                        WRITE MODE                             #
+         *  #      Defined behaviour when initialized for writing           #
+         *  #                                                               #
+         *  #################################################################
+         */
 
-        // TODO: add a another constructor for reading from input stream
-
-        // Mode method
-        { backend.is_reading()          } -> std::same_as<bool>;
-
-        // Output method
-        // Defined behaviour only after well formed writing
-        { backend.get()                 } -> std::same_as<std::string_view>;
-
-        // Writing methods
-        // Defined behaviour only when initialized for writing
         { backend.write_key(sv)         } -> std::same_as<void>;
         { backend.write_begin_array()   } -> std::same_as<void>;
         { backend.write_end_array()     } -> std::same_as<void>;
@@ -69,9 +69,18 @@ concept IsBackendType =
         { backend.write_bool(b)         } -> std::same_as<void>;
         { backend.write_string(sv)      } -> std::same_as<void>;
         { backend.write_null()          } -> std::same_as<void>;
+        // Output -> defined only after a well formed write sequence
+        { backend.get()                 } -> std::same_as<std::string_view>;
 
-        // Read methods
-        // Defined behviour only when initialized for reading
+        /**
+         *  #################################################################
+         *  #                                                               #
+         *  #                        READ MODE                              #
+         *  #      Defined behaviour when initialized for reading           #
+         *  #                                                               #
+         *  #################################################################
+         */
+
         { backend.read_key(sv)          } -> std::same_as<void>;
         { backend.read_begin_array()    } -> std::same_as<void>;
         { backend.read_end_array()      } -> std::same_as<void>;

@@ -86,12 +86,16 @@ public:
     void write_begin_array()
     {
         auto arr = yyjson_mut_arr(write_doc);
-        if (!write_stack.back()) {
-            write_stack.back() = arr; // root
-            yyjson_mut_doc_set_root(write_doc, arr);
-        } else {
+
+        if (write_current() == nullptr)
+        {
+            yyjson_mut_doc_set_root(write_doc, arr);    
+        }
+        else
+        {
             append_value(arr);
         }
+
         write_stack.push_back(arr);
     }
 
@@ -103,15 +107,17 @@ public:
     void write_begin_object()
     {
         auto obj = yyjson_mut_obj(write_doc);
-        if (!write_stack.back())
+
+
+        if (write_current() == nullptr)
         {
-            write_stack.back() = obj; // root
-            yyjson_mut_doc_set_root(write_doc, obj);
-        } 
+            yyjson_mut_doc_set_root(write_doc, obj);    
+        }
         else
         {
             append_value(obj);
         }
+
         write_stack.push_back(obj);
     }
 
@@ -292,9 +298,10 @@ private:
             assert(!key_buffer.empty());
             yyjson_mut_obj_add_val(write_doc, parent, key_buffer.data(), val);
             key_buffer = {};
-        } else
+        }
+        else // Leaf node is root
         {
-            assert(false && "Parent must be array or object.");
+            yyjson_mut_doc_set_root(write_doc, val);
         }
     }
 };

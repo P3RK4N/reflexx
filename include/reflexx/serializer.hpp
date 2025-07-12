@@ -30,11 +30,6 @@ class serializer final
     template <IsSerializer TSerializer, bool IsReading>
     friend class type_handler;
 
-    template <typename T>
-    static constexpr bool is_serializable_v = 
-        std::is_class_v<std::remove_cvref_t<T>> || 
-        std::is_unbounded_array_v<std::remove_cvref_t<T>>;
-
 /*
     #########################################################################
     ############################# Interface #################################    
@@ -62,7 +57,6 @@ public:
     };
 
     template <typename T>
-    requires is_serializable_v<T>
     static REFLEXX_INLINE_CONSTEXPR serializer_result serialize(const T& obj)
     {
         serializer_context ctx {};
@@ -78,7 +72,6 @@ public:
     };
 
     template <typename T>
-    requires is_serializable_v<T>
     static REFLEXX_INLINE_CONSTEXPR void deserialize(T& obj, std::string_view text)
     {
         serializer_context ctx {};
@@ -89,7 +82,7 @@ public:
     }
 
     template <typename T>
-    requires is_serializable_v<T> && std::is_default_constructible_v<T> // TODO: || IsProvideable<T>
+    requires std::is_default_constructible_v<T> // TODO: || IsProvideable<T>
     static REFLEXX_INLINE_CONSTEXPR T deserialize(std::string_view text)
     {
         T t {};

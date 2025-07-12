@@ -17,6 +17,7 @@ include(Catch)
 add_executable(reflexx_runtime_tests
     "runtime/playground.cpp"
     "runtime/complex.cpp"
+    "runtime/backends_test.cpp"
     "runtime/type_handler_list_test.cpp"
     "runtime/util/class_util_test.cpp"
     "runtime/util/enum_conv_test.cpp"

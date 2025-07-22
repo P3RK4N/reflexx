@@ -1,6 +1,7 @@
 #ifndef REFLEXX_STD_TYPE_HANDLER_HPP
 #define REFLEXX_STD_TYPE_HANDLER_HPP
 
+#include <ctime>
 #include <experimental/meta>
 #include <string>
 #include <vector>
@@ -116,13 +117,14 @@ struct std_handler : type_handler<TSerializer, IsReading>
                 {
                     var.template emplace<i>();
                     this->serialize_object(std::get<i>(var));
+                    break;
                 }
             }
         }
         else
         {
             this->serialize_number(var.index());
-            std::visit([this](auto& value) { this->serialize_object(value); }, var);
+            std::visit([&](auto& value) { this->serialize_object(value); }, var);
         }
 
         this->end_array();
@@ -240,9 +242,10 @@ struct std_handler : type_handler<TSerializer, IsReading>
     {
         this->begin_array();
 
-        template for (auto& elem : arr)
+        // MISC: "template for (auto& elem : arr)" not working?
+        template for (constexpr auto I : enumerate<N>())
         {
-            this->serialize_object(elem);
+            this->serialize_object(arr[I]);
         }
 
         this->end_array();

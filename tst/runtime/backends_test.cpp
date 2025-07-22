@@ -1,4 +1,4 @@
-#include <catch2/catch_all.hpp>
+#include <deque>
 #include <string>
 #include <vector>
 #include <list>
@@ -10,6 +10,8 @@
 #include <tuple>
 #include <variant>
 #include <valarray>
+
+#include <catch2/catch_all.hpp>
 
 #include "reflexx/backend.hpp"
 #include "reflexx/serializer.hpp"
@@ -106,6 +108,18 @@ void builtin_types_test()
         REQUIRE(original == deserialized);
     }
 
+    SECTION("std::deque") {
+        std::deque<int> original = {1, 2, 3, 4};
+        auto res = Serializer::serialize(original);
+
+        #ifdef REFLEXX_DEBUG_TEST_PRINT
+            std::println("std::deque -> {}", *res);
+        #endif
+
+        std::deque<int> deserialized = Serializer::template deserialize<std::deque<int>>(res.get());
+        REQUIRE(original == deserialized);
+    }
+
     SECTION("std::list") {
         std::list<int> original = {10, 20, 30};
         auto res = Serializer::serialize(original);
@@ -118,28 +132,46 @@ void builtin_types_test()
         REQUIRE(original == deserialized);
     }
 
-    SECTION("std::set") {
-        std::set<int> original = {3, 1, 4};
+    SECTION("std::forward_list") {
+        std::forward_list<int> original = {10, 20, 30};
         auto res = Serializer::serialize(original);
 
         #ifdef REFLEXX_DEBUG_TEST_PRINT
-            std::println("std::set -> {}", *res);
+            std::println("std::forward_list -> {}", *res);
         #endif
 
-        std::set<int> deserialized = Serializer::template deserialize<std::set<int>>(res.get());
+        std::forward_list<int> deserialized = Serializer::template deserialize<std::forward_list<int>>(res.get());
         REQUIRE(original == deserialized);
     }
 
-    SECTION("std::unordered_set") {
-        std::unordered_set<int> original = {3, 1, 4};
+    SECTION("std::array") {
+        std::array<int, 3> original = {10, 20, 30};
         auto res = Serializer::serialize(original);
 
         #ifdef REFLEXX_DEBUG_TEST_PRINT
-            std::println("std::unordered_set -> {}", *res);
+            std::println("std::array -> {}", *res);
         #endif
 
-        std::unordered_set<int> deserialized = Serializer::template deserialize<std::unordered_set<int>>(res.get());
+        std::array<int, 3> deserialized = Serializer::template deserialize<std::array<int, 3>>(res.get());
         REQUIRE(original == deserialized);
+    }
+
+    SECTION("std::valarray") {
+        std::valarray<int> original = {10, 20, 30};
+        auto res = Serializer::serialize(original);
+
+        #ifdef REFLEXX_DEBUG_TEST_PRINT
+            std::println("std::valarray -> {}", *res);
+        #endif
+
+        std::valarray<int> deserialized = Serializer::template deserialize<std::valarray<int>>(res.get());
+
+        auto valarray_equal = [](const auto& a, const auto& b) {
+            return a.size() == b.size() &&
+               std::equal(std::begin(a), std::end(a), std::begin(b));
+        };
+
+        REQUIRE(valarray_equal(original, deserialized));
     }
 
     SECTION("std::map") {
@@ -154,8 +186,20 @@ void builtin_types_test()
         REQUIRE(original == deserialized);
     }
 
+    SECTION("std::multimap") {
+        std::multimap<std::string, int> original = {{"a", 1}, {"b", 2}, {"a", 3}};
+        auto res = Serializer::serialize(original);
+
+        #ifdef REFLEXX_DEBUG_TEST_PRINT
+            std::println("std::multimap -> {}", *res);
+        #endif
+
+        std::multimap<std::string, int> deserialized = Serializer::template deserialize<std::multimap<std::string, int>>(res.get());
+        REQUIRE(original == deserialized);
+    }
+
     SECTION("std::unordered_map") {
-        std::unordered_map<std::string, int> original = {{"x", 10}, {"y", 20}};
+        std::unordered_map<std::string, int> original = {{"a", 1}, {"b", 2}};
         auto res = Serializer::serialize(original);
 
         #ifdef REFLEXX_DEBUG_TEST_PRINT
@@ -166,23 +210,68 @@ void builtin_types_test()
         REQUIRE(original == deserialized);
     }
 
-    SECTION("std::valarray") {
-        std::valarray<int> original = {5, 6, 7, 8};
+    SECTION("std::unordered_multimap") {
+        std::unordered_multimap<std::string, int> original = {{"a", 1}, {"b", 2}, {"a", 3}};
         auto res = Serializer::serialize(original);
 
         #ifdef REFLEXX_DEBUG_TEST_PRINT
-            std::println("std::valarray -> {}", *res);
+            std::println("std::unordered_multimap -> {}", *res);
         #endif
 
-        std::valarray<int> deserialized = Serializer::template deserialize<std::valarray<int>>(res.get());
-        REQUIRE(original.size() == deserialized.size());
-        for (std::size_t i = 0; i < original.size(); ++i) {
-            REQUIRE(original[i] == deserialized[i]);
-        }
+        std::unordered_multimap<std::string, int> deserialized = Serializer::template deserialize<std::unordered_multimap<std::string, int>>(res.get());
+        REQUIRE(original == deserialized);
+    }
+
+    SECTION("std::set") {
+        std::set<int> original = {10, 20, 30};
+        auto res = Serializer::serialize(original);
+
+        #ifdef REFLEXX_DEBUG_TEST_PRINT
+            std::println("std::set -> {}", *res);
+        #endif
+
+        std::set<int> deserialized = Serializer::template deserialize<std::set<int>>(res.get());
+        REQUIRE(original == deserialized);
+    }
+
+    SECTION("std::multiset") {
+        std::multiset<int> original = {10, 20, 20, 30};
+        auto res = Serializer::serialize(original);
+
+        #ifdef REFLEXX_DEBUG_TEST_PRINT
+            std::println("std::multiset -> {}", *res);
+        #endif
+
+        std::multiset<int> deserialized = Serializer::template deserialize<std::multiset<int>>(res.get());
+        REQUIRE(original == deserialized);
+    }
+
+    SECTION("std::unordered_set") {
+        std::unordered_set<int> original = {10, 20, 30};
+        auto res = Serializer::serialize(original);
+
+        #ifdef REFLEXX_DEBUG_TEST_PRINT
+            std::println("std::unordered_set -> {}", *res);
+        #endif
+
+        std::unordered_set<int> deserialized = Serializer::template deserialize<std::unordered_set<int>>(res.get());
+        REQUIRE(original == deserialized);
+    }
+
+    SECTION("std::unordered_multiset") {
+        std::unordered_multiset<int> original = {10, 20, 20, 30};
+        auto res = Serializer::serialize(original);
+
+        #ifdef REFLEXX_DEBUG_TEST_PRINT
+            std::println("std::unordered_multiset -> {}", *res);
+        #endif
+
+        std::unordered_multiset<int> deserialized = Serializer::template deserialize<std::unordered_multiset<int>>(res.get());
+        REQUIRE(original == deserialized);
     }
 }
 
-TEST_CASE("Builting types using yyjson_backend")
+TEST_CASE("Builtin types using yyjson_backend")
 {
     builtin_types_test<reflexx::backends::YyjsonBackend>();
 }

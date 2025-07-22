@@ -11,7 +11,6 @@ namespace reflexx {
 // TODO: u8string?
 // TODO: fixed floating types
 // TODO: Allow only fixed types to be (de)serialized?
-// TODO: Read key (iterative mode -> when keys are unknown)
 
 template <typename T>
 concept IsBackendType =

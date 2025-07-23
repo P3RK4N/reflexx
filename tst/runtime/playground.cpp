@@ -17,7 +17,7 @@ void pyprint(const Ts&... items)
 }
 
 constexpr auto settings = reflexx::serializer_settings::Strict();
-using s = reflexx::serializer<settings, reflexx::backends::YyjsonBackend>;
+using s = reflexx::serializer<settings, reflexx::backends::yyjson_backend>;
 
 
 TEST_CASE( "Playground", "[MISC]" )
@@ -63,4 +63,10 @@ TEST_CASE( "Playground", "[MISC]" )
 
     // pyprint(*s::serialize(2));
 
+    std::map<std::string, int> original
+    {
+        {"a", 1}, {"b", 2}, {"c", 3}
+    };
+
+    pyprint(*s::serialize(original));
 }

@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <string_view>
+#include <variant>
 #include <vector>
 #include <cstdint>
 #include <cassert>
@@ -13,61 +14,33 @@
 namespace reflexx {
 namespace backends {
 
-struct YyjsonBackend
+struct yyjson_backend
 {
-private:
-    struct yyjson_read_ctx
-    {
-        yyjson_val* val;
-        yyjson_arr_iter arrIter;
-        bool isArr = false;
-        bool hasNext = false;
-    };
-
 public:
-    yyjson_mut_doc* write_doc = nullptr;
-    yyjson_doc* read_doc = nullptr;
-    const char* write_result = nullptr;
-    std::size_t write_result_size = 0;
-
-    // to track current container (array/object)
-    std::vector<yyjson_mut_val*> write_stack;
-    std::vector<yyjson_read_ctx> read_stack;
-
-    bool reading = false;
-
-    explicit YyjsonBackend()
+    inline explicit yyjson_backend()
     {
         write_doc = yyjson_mut_doc_new(nullptr);
-        write_stack.push_back(nullptr);
-        reading = false;
+        write_stack.reserve(8);
     }
     
-    explicit YyjsonBackend(std::span<const char> input)
+    inline explicit yyjson_backend(std::span<const char> input)
     {
         read_doc = yyjson_read(input.data(), input.size_bytes(), YYJSON_READ_ALLOW_COMMENTS);
-        read_stack.push_back({ yyjson_doc_get_root(read_doc) });
-        reading = true;
+        read_stack.reserve(8);
+
+        val_cache = yyjson_doc_get_root(read_doc);
     }
 
-    ~YyjsonBackend()
+    inline ~yyjson_backend()
     {
         if (write_doc)      yyjson_mut_doc_free(write_doc);
         if (read_doc)       yyjson_doc_free(read_doc);
         if (write_result)   free((void*)write_result);
     }
 
-    bool is_reading() const
+    inline std::string_view get()
     {
-        return reading;
-    }
-
-    std::string_view get()
-    {
-        if (write_result == nullptr)
-        {
-            write_result = yyjson_mut_write(write_doc, YYJSON_WRITE_PRETTY, &write_result_size);
-        }
+        write_result = write_result ? write_result : yyjson_mut_write(write_doc, YYJSON_WRITE_PRETTY, &write_result_size);
 
         return { write_result, write_result_size };
     }
@@ -78,57 +51,38 @@ public:
     *   ###################################
     */
 
-    void write_key(std::string_view sv)
+    inline void write_key(std::string_view sv)
     {
-        key_buffer = sv;
+        key_cache = sv;
     }
     
-    void write_begin_array()
+    inline void write_begin_array()
     {
         auto arr = yyjson_mut_arr(write_doc);
-
-        if (write_current() == nullptr)
-        {
-            yyjson_mut_doc_set_root(write_doc, arr);    
-        }
-        else
-        {
-            append_value(arr);
-        }
-
+        append_value(arr);
         write_stack.push_back(arr);
     }
 
-    void write_end_array()
+    inline void write_end_array()
     {
         write_stack.pop_back();
     }
     
-    void write_begin_object()
+    inline void write_begin_object()
     {
         auto obj = yyjson_mut_obj(write_doc);
-
-
-        if (write_current() == nullptr)
-        {
-            yyjson_mut_doc_set_root(write_doc, obj);    
-        }
-        else
-        {
-            append_value(obj);
-        }
-
+        append_value(obj);
         write_stack.push_back(obj);
     }
 
-    void write_end_object()
+    inline void write_end_object()
     {
         write_stack.pop_back();
     }
 
     template <typename T>
     requires std::is_arithmetic_v<T>
-    void write_number(T val)
+    inline void write_number(T val)
     {
         if constexpr (std::is_floating_point_v<T>)
         {
@@ -144,17 +98,17 @@ public:
         }
     }
 
-    void write_bool(bool b)
+    inline void write_bool(bool b)
     {
         append_value(yyjson_mut_bool(write_doc, b));
     }
 
-    void write_string(std::string_view sv)
+    inline void write_string(std::string_view sv)
     {
         append_value(yyjson_mut_strn(write_doc, sv.data(), sv.size()));
     }
     
-    void write_null()
+    inline void write_null()
     {
         append_value(yyjson_mut_null(write_doc));
     }
@@ -165,143 +119,159 @@ public:
     *   ###################################
     */
 
-    void read_key(std::string_view key)
+    inline void read_key(std::string_view key)
     {
-        read_stack.push_back({ yyjson_obj_getn(read_current().val, key.data(), key.size()) });
+        val_cache = yyjson_obj_getn(read_stack.back().val, key.data(), key.size());
     }
-    
-    void read_begin_array()
-    {
-        auto& current = read_current();
-        yyjson_arr_iter_init(current.val, &current.arrIter);
-        current.isArr = true;
-        current.hasNext = yyjson_arr_iter_has_next(&current.arrIter);
 
-        // Add first element (or nullptr) to stack
-        read_stack.push_back({ yyjson_arr_iter_next(&current.arrIter) });
+    inline std::string_view read_key()
+    {
+        auto key = yyjson_obj_iter_next(&std::get<yyjson_obj_iter>(read_stack.back().iter));
+        val_cache = yyjson_obj_iter_get_val(key);
+        return { unsafe_yyjson_get_str(key), unsafe_yyjson_get_len(key) };
     }
     
-    void read_end_array()
+    inline void read_begin_array()
     {
-        // Pop arr element (or nullptr)
+        scoped_val_cacher _ { this };
+
+        read_stack.push_back({ val_cache, yyjson_arr_iter_with(val_cache) });
+    }
+    
+    inline void read_end_array()
+    {
         read_stack.pop_back();
-
-        // Pop arr (and add next element if in another array)
-        arr_elem_read_pop();
     }
     
-    void read_begin_object()
+    inline void read_begin_object()
     {
-        // Nothing to write
+        scoped_val_cacher _ { this };
+
+        read_stack.push_back({ val_cache, yyjson_obj_iter_with(val_cache) });
     }
 
-    void read_end_object()
+    inline void read_end_object()
     {
-        arr_elem_read_pop();
+        read_stack.pop_back();
     }
 
     template <typename T>
     requires std::is_arithmetic_v<T>
-    void read_number(T& val)
+    inline void read_number(T& val)
     {
+        scoped_val_cacher _ { this };
+
         if constexpr (std::is_floating_point_v<T>)
         {
-            val = static_cast<T>(yyjson_get_real(read_current().val));
+            val = static_cast<T>(unsafe_yyjson_get_real(val_cache));
         } 
         else if constexpr (std::is_signed_v<T>)
         {
-            val = static_cast<T>(yyjson_get_sint(read_current().val));
+            val = static_cast<T>(unsafe_yyjson_get_sint(val_cache));
         }
         else
         {
-            val = static_cast<T>(yyjson_get_uint(read_current().val));
+            val = static_cast<T>(unsafe_yyjson_get_uint(val_cache));
         }
-
-        arr_elem_read_pop();
     }
 
-    void read_bool(bool& b)
+    inline void read_bool(bool& b)
     {
-        b = yyjson_get_bool(read_current().val);
+        scoped_val_cacher _ { this };
 
-        arr_elem_read_pop();
+        b = unsafe_yyjson_get_bool(val_cache);
     }
 
-    std::string_view read_string()
+    inline std::string_view read_string()
     {
-        std::string_view view = { yyjson_get_str(read_current().val), yyjson_get_len(read_current().val) };
+        scoped_val_cacher _ { this };
 
-        arr_elem_read_pop();
-
-        return view;
+        return { unsafe_yyjson_get_str(val_cache), unsafe_yyjson_get_len(val_cache) };
     }
 
-    bool read_is_null()
+    inline bool read_is_null()
     {
-        return yyjson_is_null(read_current().val);
+        val_cache = val_cache ? val_cache : yyjson_arr_iter_next(&std::get<yyjson_arr_iter>(read_stack.back().iter));
+
+        return unsafe_yyjson_is_null(val_cache);
     }
 
-    void read_skip()
+    inline void read_skip()
     {
-        arr_elem_read_pop();
+        scoped_val_cacher _ { this };
     }
 
-    bool read_has_next()
+    inline bool read_has_next()
     {
-        return read_stack.size() > 1 && read_stack[read_stack.size() - 2].hasNext;
+        return unsafe_yyjson_is_arr(read_stack.back().val) ? 
+            yyjson_arr_iter_has_next(&std::get<yyjson_arr_iter>(read_stack.back().iter)) :
+            yyjson_obj_iter_has_next(&std::get<yyjson_obj_iter>(read_stack.back().iter));
     }
 
 private:
-    std::string_view key_buffer;
-    
-    // Use this after writing is done
-    yyjson_mut_val* write_root()
-    {
-        return write_stack.front();
-    }
+    using reflexx_yyjson_iter = std::variant<yyjson_arr_iter, yyjson_obj_iter>;
 
-    yyjson_read_ctx& read_root()
+    struct yyjson_read_ctx
     {
-        return read_stack.front();
-    }
+        yyjson_val* val;
+        reflexx_yyjson_iter iter { yyjson_arr_iter{} };
+    };
 
-    yyjson_mut_val* write_current()
+    /**
+    * @brief RAII utility for managing cached values during array iteration.
+    *
+    * - On construction: preloads the next array element into the internal cache, if not already cached.
+    * - On destruction: flushes the cached value to ensure consistency.
+    * 
+    * @note This helper is intended solely for array iterators.
+    *       Iterating over objects or other types requires reading keys first,
+    *       which automatically populates the cache.
+    */
+    struct scoped_val_cacher
     {
-        return write_stack.back();
-    }
+        yyjson_backend* _parent;
 
-    yyjson_read_ctx& read_current()
-    {
-        return read_stack.back();
-    }
-    
-    void arr_elem_read_pop()
-    {
-        read_stack.pop_back();
-        if (!read_stack.empty() && read_current().isArr)
+        inline scoped_val_cacher(yyjson_backend* parent)
+        : _parent(parent)
         {
-            read_current().hasNext = yyjson_arr_iter_has_next(&read_current().arrIter);
-            read_stack.push_back({ yyjson_arr_iter_next(&read_current().arrIter) });
+            // If nullptr, we are in array
+            _parent->val_cache = _parent->val_cache ? _parent->val_cache : yyjson_arr_iter_next(&std::get<yyjson_arr_iter>(_parent->read_stack.back().iter));
         }
-    }
 
-    void append_value(yyjson_mut_val* val)
-    {
-        yyjson_mut_val* parent = write_current();
-
-        if (yyjson_mut_is_arr(parent))
+        inline ~scoped_val_cacher()
         {
-            yyjson_mut_arr_add_val(parent, val);
-        } 
-        else if (yyjson_mut_is_obj(parent))
-        {
-            assert(!key_buffer.empty());
-            yyjson_mut_obj_add_val(write_doc, parent, key_buffer.data(), val);
-            key_buffer = {};
+            _parent->val_cache = nullptr;
         }
-        else // Leaf node is root
+    };
+
+    yyjson_mut_doc* write_doc = nullptr;
+    yyjson_doc* read_doc = nullptr;
+    const char* write_result = nullptr;
+    std::size_t write_result_size = 0;
+
+    // to track current container (array/object)
+    std::vector<yyjson_mut_val*> write_stack;
+    std::vector<yyjson_read_ctx> read_stack;
+
+    std::string_view key_cache {};
+    yyjson_val* val_cache {};
+
+    inline void append_value(yyjson_mut_val* val)
+    {
+        // No parent
+        if (write_stack.empty())
         {
             yyjson_mut_doc_set_root(write_doc, val);
+        }
+        // Array parent
+        else if (auto& parent = write_stack.back(); unsafe_yyjson_is_arr(parent))
+        {
+            yyjson_mut_arr_add_val(parent, val);
+        }
+        // Object parent
+        else
+        {
+            yyjson_mut_obj_add_val(write_doc, parent, key_cache.data(), val);
         }
     }
 };

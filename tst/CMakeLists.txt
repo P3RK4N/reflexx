@@ -14,6 +14,11 @@ include(reflexx_compile_test)
 list(APPEND CMAKE_MODULE_PATH "${catch2_SOURCE_DIR}/extras")
 include(Catch)
 
+
+############################################################
+##################### RUNTIME TESTS ########################
+############################################################
+
 add_executable(reflexx_runtime_tests
     "runtime/playground.cpp"
     "runtime/complex.cpp"
@@ -31,6 +36,12 @@ set_target_properties(
 )
 target_link_libraries(reflexx_runtime_tests PRIVATE reflexx Catch2::Catch2WithMain)
 catch_discover_tests(reflexx_runtime_tests)
+
+
+############################################################
+#################### COMPTIME TESTS ########################
+############################################################
+
 
 file(GLOB_RECURSE REFLEXX_COMPILE_TESTS "${reflexx_project_SOURCE_DIR}/tst/comptime/*.cpp")
 
@@ -51,3 +62,18 @@ foreach(source_file IN LISTS REFLEXX_COMPILE_TESTS)
         INCLUDE_DIRS "${reflexx_project_SOURCE_DIR}/include"
     )
 endforeach()
+
+############################################################
+###################### BENCHMARK ###########################
+############################################################
+
+add_executable(reflexx_benchmark
+    "benchmark/simple_benchmark.cpp"
+)
+set_target_properties(
+    reflexx_benchmark 
+    PROPERTIES
+    CXX_STANDARD 26
+    CXX_STANDARD_REQUIRED ON
+)
+target_link_libraries(reflexx_benchmark PRIVATE reflexx)

@@ -4,21 +4,19 @@
 #include <ctime>
 #include <experimental/meta>
 #include <string>
+#include <type_traits>
 #include <vector>
 #include <deque>
 #include <list>
 #include <forward_list>
 #include <array>
-#include <map>
-#include <set>
-#include <unordered_map>
-#include <unordered_set>
 #include <optional>
 #include <tuple>
 #include <variant>
 #include <valarray>
 
 #include "reflexx/type_handler.hpp"
+#include "reflexx/util/std_util.hpp"
 
 // TODO: shared_ptr, unique_ptr
 
@@ -278,13 +276,31 @@ struct std_handler : type_handler<TSerializer, IsReading>
 
     /**
      *  ##################################################
-     *  ############# SEQUENTIAL CONTAINERS ##############
+     *  ############# ASSOCIATIVE CONTAINERS #############
      *  ##################################################
      */
 
-    template <typename K, typename V, typename Comp, typename Alloc>
-    void serialize(std::map<K, V, Comp, Alloc>& map)
+    template <typename T>
+    requires util::is_std_map_v<T>
+    void serialize(T& map)
     {
+        this->serialize_map(map);
+    }
+
+    template <typename T>
+    requires util::is_std_set_v<T>
+    void serialize(T& set)
+    {
+        this->serialize_set(set);
+    }
+
+    template <typename TMap>
+    requires (!std::is_same_v<typename TMap::key_type, std::string>)
+    void serialize_map(TMap& map)
+    {
+        using K = typename TMap::key_type;
+        using V = typename TMap::mapped_type;
+
         this->begin_array();
 
         if constexpr (IsReading)
@@ -310,171 +326,43 @@ struct std_handler : type_handler<TSerializer, IsReading>
         this->end_array();
     }
 
-    template <typename K, typename V, typename Comp, typename Alloc>
-    void serialize(std::multimap<K, V, Comp, Alloc>& map)
+    template <typename TMap>
+    requires std::is_same_v<typename TMap::key_type, std::string>
+    void serialize_map(TMap& map)
     {
-        this->begin_array();
+        using K = typename TMap::key_type;
+        using V = typename TMap::mapped_type;
+
+        this->begin_object();
 
         if constexpr (IsReading)
         {
             map.clear();
+
             while (this->has_next())
             {
-                std::pair<K, V> entry {};
-
-                this->serialize_object(entry);
-
-                map.insert(std::move(entry));
+                std::pair<std::string, V> entry { this->key(), V{} };
+                this->serialize_object(entry.second);
+                map.emplace(std::move(entry));
             }
         }
         else
         {
-            for (const auto& entry : map)
+            for (const auto& [key, value] : map)
             {
-                this->serialize_object(entry);
-            }
-        }
-
-        this->end_array();
-    }
-
-    template <typename K, typename V, typename Hash, typename KeyEqual, typename Alloc>
-    void serialize(std::unordered_map<K, V, Hash, KeyEqual, Alloc>& map)
-    {
-        this->begin_array();
-
-        if constexpr (IsReading)
-        {
-            map.clear();
-            while (this->has_next())
-            {
-                std::pair<K, V> entry {};
-
-                this->serialize_object(entry);
-
-                map.insert(std::move(entry));
-            }
-        }
-        else
-        {
-            for (const auto& entry : map)
-            {
-                this->serialize_object(entry);
-            }
-        }
-
-        this->end_array();
-    }
-
-    template <typename K, typename V, typename Hash, typename KeyEqual, typename Alloc>
-    void serialize(std::unordered_multimap<K, V, Hash, KeyEqual, Alloc>& map)
-    {
-        this->begin_array();
-
-        if constexpr (IsReading)
-        {
-            map.clear();
-            while (this->has_next())
-            {
-                std::pair<K, V> entry {};
-
-                this->serialize_object(entry);
-
-                map.insert(std::move(entry));
-            }
-        }
-        else
-        {
-            for (const auto& entry : map)
-            {
-                this->serialize_object(entry);
-            }
-        }
-
-        this->end_array();
-    }
-
-    template <typename T, typename Comp, typename Alloc>
-    void serialize(std::set<T, Comp, Alloc>& set)
-    {
-        this->begin_array();
-
-        if constexpr (IsReading)
-        {
-            set.clear();
-            while (this->has_next())
-            {
-                T value {};
-                this->serialize_object(value);
-                set.insert(std::move(value));
-            }
-        }
-        else
-        {
-            for (const auto& value : set)
-            {
+                this->key(key);
                 this->serialize_object(value);
             }
         }
 
-        this->end_array();
-    }
+        this->end_object();
+    }    
 
-    template <typename T, typename Comp, typename Alloc>
-    void serialize(std::multiset<T, Comp, Alloc>& set)
+    template <typename TSet>
+    void serialize_set(TSet& set)
     {
-        this->begin_array();
+        using T = typename TSet::value_type;
 
-        if constexpr (IsReading)
-        {
-            set.clear();
-            while (this->has_next())
-            {
-                T value {};
-                this->serialize_object(value);
-                set.insert(std::move(value));
-            }
-        }
-        else
-        {
-            for (const auto& value : set)
-            {
-                this->serialize_object(value);
-            }
-        }
-
-        this->end_array();
-    }
-
-    template <typename T, typename Hash, typename KeyEqual, typename Alloc>
-    void serialize(std::unordered_set<T, Hash, KeyEqual, Alloc>& set)
-    {
-        this->begin_array();
-
-        if constexpr (IsReading)
-        {
-            set.clear();
-            while (this->has_next())
-            {
-                T value {};
-                this->serialize_object(value);
-                set.insert(std::move(value));
-            }
-        }
-        else
-        {
-            for (const auto& value : set)
-            {
-                this->serialize_object(value);
-            }
-        }
-
-        this->end_array();
-    }
-
-    template <typename T, typename Hash, typename KeyEqual, typename Alloc>
-    void serialize(std::unordered_multiset<T, Hash, KeyEqual, Alloc>& set)
-    {
         this->begin_array();
 
         if constexpr (IsReading)

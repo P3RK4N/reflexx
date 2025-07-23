@@ -81,6 +81,7 @@ concept IsBackendType =
          */
 
         { backend.read_key(sv)          } -> std::same_as<void>;
+        { backend.read_key()            } -> std::same_as<std::string_view>;
         { backend.read_begin_array()    } -> std::same_as<void>;
         { backend.read_end_array()      } -> std::same_as<void>;
         { backend.read_begin_object()   } -> std::same_as<void>;

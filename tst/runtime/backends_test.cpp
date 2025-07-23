@@ -273,5 +273,5 @@ void builtin_types_test()
 
 TEST_CASE("Builtin types using yyjson_backend")
 {
-    builtin_types_test<reflexx::backends::YyjsonBackend>();
+    builtin_types_test<reflexx::backends::yyjson_backend>();
 }

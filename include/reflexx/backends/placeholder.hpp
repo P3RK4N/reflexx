@@ -17,7 +17,6 @@ struct placeholder_backend
     constexpr placeholder_backend(std::span<const char>)        {               }
     constexpr ~placeholder_backend()                            {               }
 
-    constexpr bool              is_reading()                    { return false; }
     constexpr std::string_view  get()                           { return {};    }
 
     template <typename T>
@@ -36,6 +35,7 @@ struct placeholder_backend
     requires std::is_arithmetic_v<T>
     constexpr void              read_number(T&)                 {               }
     constexpr void              read_key(std::string_view)      {               }
+    constexpr std::string_view  read_key()                      { return {};    }
     constexpr void              read_begin_array()              {               }
     constexpr void              read_end_array()                {               }
     constexpr void              read_begin_object()             {               }

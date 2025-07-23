@@ -1,6 +1,7 @@
 {
     "cmake.buildDirectory": "${workspaceFolder}/bin",
     "cmake.configureArgs": [
+        "-G", "Ninja Multi-Config",
         "-DCMAKE_TOOLCHAIN_FILE=${workspaceFolder}/deps/clang-p2996-x86_64-unknown-linux-gnu/cmake/clang.toolchain.cmake"
     ],
     "C_Cpp.intelliSenseEngine": "disabled",

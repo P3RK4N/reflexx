@@ -20,7 +20,7 @@ void pprint(const Ts&... items)
 constexpr auto settings = reflexx::serializer_settings::Strict();
 
 // Runtime only
-using s = reflexx::serializer<settings, reflexx::backends::YyjsonBackend>;
+using s = reflexx::serializer<settings, reflexx::backends::yyjson_backend>;
 
 enum class Role { Admin, Guest, User };
 

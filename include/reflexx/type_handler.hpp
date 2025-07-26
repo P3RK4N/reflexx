@@ -184,7 +184,7 @@ protected:
 
     constexpr inline std::string_view key() const
     {
-        static_assert(IsReading, "next_key is only callable in Read/Deserialize mode!");
+        static_assert(IsReading, "key(void) is only callable in Read/Deserialize mode!");
         return __ctx__->backend_->read_key();
     }
 };

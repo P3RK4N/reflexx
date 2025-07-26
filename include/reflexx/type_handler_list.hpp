@@ -4,6 +4,7 @@
 #include <cassert>
 #include <concepts>
 #include <experimental/meta>
+#include <utility>
 
 #include "reflexx/type_handler.hpp"
 
@@ -43,6 +44,7 @@ private:
         }
         
         assert(false && "Could not find handler for type");
+        std::unreachable();
     };
 
 public:

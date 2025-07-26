@@ -14,6 +14,7 @@
 #include "reflexx/util/enum_conv.hpp"
 #include "reflexx/builtin/default_handler.hpp"
 #include "reflexx/builtin/std_handler.hpp"
+#include "reflexx/provider.hpp"
 
 namespace reflexx
 {
@@ -82,10 +83,10 @@ public:
     }
 
     template <typename T>
-    requires std::is_default_constructible_v<T> // TODO: || IsProvideable<T>
+    requires std::is_default_constructible_v<T>
     static REFLEXX_INLINE_CONSTEXPR T deserialize(std::string_view text)
     {
-        T t {};
+        T t = provider<T>{}();
         deserialize(t, text);
         return t;
     }

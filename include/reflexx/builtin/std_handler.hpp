@@ -17,6 +17,8 @@
 
 #include "reflexx/type_handler.hpp"
 #include "reflexx/util/std_util.hpp"
+#include "reflexx/provider.hpp"
+#include "reflexx/util/move_construct_if_possible.hpp"
 
 // TODO: shared_ptr, unique_ptr
 
@@ -55,7 +57,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
             {
                 if (!opt.has_value())
                 {
-                    opt.emplace();
+                    opt.emplace(provider<T>{}());
                 }
                 this->serialize_object(*opt);
             }
@@ -122,7 +124,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
         else
         {
             this->serialize_number(var.index());
-            std::visit([&](auto& value) { this->serialize_object(value); }, var);
+            std::visit([this](auto& value) { this->serialize_object(value); }, var);
         }
 
         this->end_array();
@@ -144,7 +146,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
             vec.clear();
             while (this->has_next())
             {
-                vec.emplace_back();
+                vec.emplace_back(provider<T>{}());
                 this->serialize_object(vec.back());
             }
         }
@@ -169,7 +171,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
             deq.clear();
             while (this->has_next())
             {
-                deq.emplace_back();
+                deq.emplace_back(provider<T>{}());
                 this->serialize_object(deq.back());
             }
         }
@@ -194,7 +196,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
             lst.clear();
             while (this->has_next())
             {
-                lst.emplace_back();
+                lst.emplace_back(provider<T>{}());
                 this->serialize_object(lst.back());
             }
         }
@@ -220,7 +222,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
             auto insert_pos = flst.before_begin();
             while (this->has_next())
             {
-                insert_pos = flst.emplace_after(insert_pos);
+                insert_pos = flst.emplace_after(insert_pos, provider<T>{}());
                 this->serialize_object(*insert_pos);
             }
         }
@@ -260,7 +262,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
 
             if constexpr (IsReading)
             {
-                arr.resize(size);
+                arr.resize(size, provider<T>{}());
             }
 
             this->key("data");
@@ -308,11 +310,15 @@ struct std_handler : type_handler<TSerializer, IsReading>
             map.clear();
             while (this->has_next())
             {
-                std::pair<K, V> entry {};
+                K k = provider<K>{}();
+                V v = provider<V>{}();
 
-                this->serialize_object(entry);
+                this->begin_array();
+                    this->serialize_object(k);
+                    this->serialize_object(v);
+                this->end_array();
 
-                map.insert(std::move(entry));
+                map.emplace(util::move_construct_if_possible(k), util::move_construct_if_possible(v));
             }
         }
         else
@@ -341,9 +347,12 @@ struct std_handler : type_handler<TSerializer, IsReading>
 
             while (this->has_next())
             {
-                std::pair<std::string, V> entry { this->key(), V{} };
-                this->serialize_object(entry.second);
-                map.emplace(std::move(entry));
+                V v = provider<V>{}();
+
+                std::string_view k = this->key();
+                this->serialize_object(v);
+
+                map.emplace(k, util::move_construct_if_possible(v));
             }
         }
         else
@@ -370,9 +379,9 @@ struct std_handler : type_handler<TSerializer, IsReading>
             set.clear();
             while (this->has_next())
             {
-                T value {};
+                T value = provider<T>{}();
                 this->serialize_object(value);
-                set.insert(std::move(value));
+                set.emplace(util::move_construct_if_possible(value));
             }
         }
         else

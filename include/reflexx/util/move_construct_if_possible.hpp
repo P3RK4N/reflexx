@@ -8,7 +8,7 @@ namespace reflexx {
 namespace util {
 
 template <typename T>
-inline constexpr decltype(auto) move_construct_if_possible(T& arg)
+inline constexpr decltype(auto) move_construct_if_possible(T& arg) noexcept
 {
     if constexpr (std::is_move_constructible_v<T>)
     {

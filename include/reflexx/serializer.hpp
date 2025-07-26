@@ -5,6 +5,7 @@
 #include <memory>
 #include <string_view>
 #include <type_traits>
+#include <utility>
 
 #include "reflexx/declare.hpp"
 
@@ -15,11 +16,10 @@
 #include "reflexx/builtin/default_handler.hpp"
 #include "reflexx/builtin/std_handler.hpp"
 #include "reflexx/provider.hpp"
+#include "reflexx/util/serializable_number.hpp"
 
 namespace reflexx
 {
-
-#define REFLEXX_INLINE_CONSTEXPR inline
 
 template <
     serializer_settings SerializerSettings,
@@ -39,55 +39,49 @@ class serializer final
 public:
     class serializer_result final
     {    
-    private:
         friend class serializer;
-        inline constexpr serializer_result() = default;
+        
+    private:
+        inline constexpr serializer_result(std::unique_ptr<BackendType>&& backend) 
+        : backend_(std::move(backend)) {}
 
-        std::unique_ptr<BackendType> backend_ = nullptr;
+        std::unique_ptr<BackendType> backend_ {};
 
     public:
-        inline constexpr std::string_view get() const
+        inline constexpr std::string_view get() const noexcept
         {
             return backend_->get();
         }
 
-        inline constexpr std::string_view operator*() const
+        inline constexpr std::string_view operator*() const noexcept
         {
             return this->get();
         }
     };
 
     template <typename T>
-    static REFLEXX_INLINE_CONSTEXPR serializer_result serialize(const T& obj)
+    static inline constexpr serializer_result serialize(const T& obj)
     {
-        serializer_context ctx {};
-        serializer_result result {};
-        
-        ctx.backend_ = std::make_unique<BackendType>();
-        
+        serializer_context ctx { std::make_unique<BackendType>() };
         serialize(obj, ctx);
-        
-        result.backend_ = std::move(ctx.backend_);
 
-        return result;
+        return { std::move(ctx.backend_) };
     };
 
     template <typename T>
-    static REFLEXX_INLINE_CONSTEXPR void deserialize(T& obj, std::string_view text)
+    static inline constexpr void deserialize(T& obj, std::string_view text)
     {
-        serializer_context ctx {};
-        
-        ctx.backend_ = std::make_unique<BackendType>(text);
-        
+        serializer_context ctx { std::make_unique<BackendType>(text) };
         deserialize(obj, ctx);
     }
 
     template <typename T>
     requires std::is_default_constructible_v<T>
-    static REFLEXX_INLINE_CONSTEXPR T deserialize(std::string_view text)
+    static inline constexpr T deserialize(std::string_view text)
     {
         T t = provider<T>{}();
         deserialize(t, text);
+
         return t;
     }
 
@@ -103,7 +97,7 @@ public:
 
 private:
     template <typename T>
-    static void static_assert_category_type()
+    static inline constexpr void static_assert_category_type() noexcept
     {
         static_assert
         (
@@ -117,29 +111,6 @@ private:
             "unbounded arrays, functions and unions are not supported\n"
             "by default. Consider using smart pointers, vectors and variants!\n"
             "You can also use custom serializers to handle these types.\n"
-            "\n\n"
-            "##########################################################\n"
-            "################## ^SERIALIZATION ERROR^ #################\n"
-            "##########################################################\n"
-            "\n\n\n"
-        );
-    }
-
-    template <typename THandler, bool IsReading>
-    static void static_assert_type_handler()
-    {
-        using THandlerBase = type_handler<serializer, IsReading>;
-
-        static_assert
-        (
-            std::derived_from<THandler, THandlerBase> && std::is_default_constructible_v<THandler>, 
-            "\n\n\n"
-            "##########################################################\n"
-            "################## ˇSERIALIZATION ERRORˇ #################\n"
-            "##########################################################\n"
-            "\n\n"
-            "Handler should derive from type_handler with forwarded\n"
-            "template params and be default constructible!\n"
             "\n\n"
             "##########################################################\n"
             "################## ^SERIALIZATION ERROR^ #################\n"
@@ -166,35 +137,49 @@ private:
     #########################################################################
 */
 
+    template <typename T, bool IsReading>
+    struct handler_for
+    {
+        using type = typename TypeHandlerList::template get_first_t<serializer, IsReading, std::remove_cvref_t<T>>;
+        using base_type = type_handler<serializer, IsReading>;
+        
+        static_assert(std::derived_from<type, base_type>, "Handler should derive from type_handler with forwarded template params!");
+        static_assert(std::is_nothrow_default_constructible_v<type>, "Handler should be nothrow default constructible!");
+    };
+
+    template <typename T, bool IsReading>
+    using handler_for_t = typename handler_for<T, IsReading>::type;
+
     template <typename T>
     requires std::is_class_v<std::remove_cvref_t<T>>
-    static REFLEXX_INLINE_CONSTEXPR void serialize(const T& obj, serializer_context& ctx)
+    static inline constexpr void serialize(const T& obj, serializer_context& ctx)
+    noexcept(noexcept(handler_for_t<T, false>{}.serialize(const_cast<T&>(obj))))
     {
-        using THandler = typename TypeHandlerList::template get_first_t<serializer, /* IsReading */ false, T>;
-        static_assert_type_handler<THandler, /* IsReading */ false>();
-
         // NOTE: We need to cast constness away due to symmetric read/write api.
         //  Method signature promises constness and that is what user will get at the end. (I promise)
-        auto handler = THandler{};
+        auto handler = handler_for_t<T, /* IsReading */ false>{};
         handler.__ctx__ = &ctx;
         handler.serialize(const_cast<T&>(obj));
     }
 
     template <typename T>
     requires std::is_class_v<std::remove_cvref_t<T>>
-    static REFLEXX_INLINE_CONSTEXPR void deserialize(T& obj, serializer_context& ctx)
+    static inline constexpr void deserialize(T& obj, serializer_context& ctx)
+    noexcept(noexcept(handler_for_t<T, true>{}.serialize(obj)))
     {
-        using THandler = typename TypeHandlerList::template get_first_t<serializer, /* IsReading */ true, T>;
-        static_assert_type_handler<THandler, /* IsReading */ true>();
-
-        auto handler = THandler{};
+        auto handler = handler_for_t<T, /* IsReading */ true>{};
         handler.__ctx__ = &ctx;
         handler.serialize(obj);
     }
 
     template <typename T>
     requires std::is_bounded_array_v<std::remove_cvref_t<T>>
-    static REFLEXX_INLINE_CONSTEXPR void serialize(const T& obj, serializer_context& ctx)
+    static inline constexpr void serialize(const T& obj, serializer_context& ctx)
+    noexcept(
+        noexcept(ctx.backend_->write_begin_array()) &&
+        noexcept(serialize(obj[0], ctx)) &&
+        noexcept(ctx.backend_->write_end_array())
+    )
     {
         using TArray = std::remove_cvref_t<T>;
 
@@ -210,7 +195,12 @@ private:
 
     template <typename T>
     requires std::is_bounded_array_v<std::remove_cvref_t<T>>
-    static REFLEXX_INLINE_CONSTEXPR void deserialize(T& obj, serializer_context& ctx)
+    static inline constexpr void deserialize(T& obj, serializer_context& ctx)
+    noexcept(
+        noexcept(ctx.backend_->read_begin_array()) &&
+        noexcept(deserialize(obj[0], ctx)) &&
+        noexcept(ctx.backend_->read_end_array())
+    )
     {
         using TArray = std::remove_cvref_t<T>;
 
@@ -225,86 +215,97 @@ private:
     }
 
     template <typename T>
-    requires std::is_fundamental_v<std::remove_cvref_t<T>>
-    static REFLEXX_INLINE_CONSTEXPR void serialize(const T& obj, serializer_context& ctx)
+    requires std::is_same_v<std::remove_cvref_t<T>, std::nullptr_t>
+    static inline constexpr void serialize(const T&, serializer_context& ctx)
+    noexcept(noexcept(ctx.backend_->write_null()))
     {
-        if constexpr (std::is_same_v<T, std::nullptr_t>)
-        {
-            ctx.backend_->write_null();
-        }
-        else if constexpr (std::is_same_v<T, bool>)
-        {
-            ctx.backend_->write_bool(obj);
-        }
-        else
-        {
-            ctx.backend_->write_number(obj);
-        }
+        ctx.backend_->write_null();
     }
 
     template <typename T>
-    requires std::is_fundamental_v<std::remove_cvref_t<T>>
-    static REFLEXX_INLINE_CONSTEXPR void deserialize(T& obj, serializer_context& ctx)
+    requires std::is_same_v<std::remove_cvref_t<T>, std::nullptr_t>
+    static inline constexpr void deserialize(T&, serializer_context& ctx)
+    noexcept(noexcept(ctx.backend_->read_skip()))
     {
-        if constexpr (std::is_same_v<T, std::nullptr_t>)
-        {
-            ctx.backend_->read_skip();
-        }
-        else if constexpr (std::is_same_v<T, bool>)
-        {
-            ctx.backend_->read_bool(obj);
-        }
-        else
-        {
-            ctx.backend_->read_number(obj);
-        }
+        ctx.backend_->read_skip();
     }
 
     template <typename T>
-    requires std::is_enum_v<std::remove_cvref_t<T>>
-    static REFLEXX_INLINE_CONSTEXPR void serialize(const T& obj, serializer_context& ctx)
+    requires std::is_same_v<std::remove_cvref_t<T>, bool>
+    static inline constexpr void serialize(const T& obj, serializer_context& ctx)
+    noexcept(noexcept(ctx.backend_->write_bool(obj)))
     {
-        using TEnum = std::remove_cvref_t<T>;
+        ctx.backend_->write_bool(obj);
+    }
 
-        if constexpr (format_enum_as_string_v<SerializerSettings>)
-        {
-            ctx.backend_->write_string(util::enum_to_string(obj));
-        }
-        else
-        {
-            ctx.backend_->write_number(static_cast<std::underlying_type_t<TEnum>>(obj));
-        }
+    template <typename T>
+    requires std::is_same_v<std::remove_cvref_t<T>, bool>
+    static inline constexpr void deserialize(T& obj, serializer_context& ctx)
+    noexcept(noexcept(ctx.backend_->read_bool(obj)))
+    {
+        ctx.backend_->read_bool(obj);
+    }
+
+    template <typename T>
+    requires util::is_serializable_number_v<std::remove_cvref_t<T>>
+    static inline constexpr void serialize(const T& obj, serializer_context& ctx)
+    noexcept(noexcept(ctx.backend_->write_number(obj)))
+    {
+        ctx.backend_->write_number(obj);
+    }
+
+    template <typename T>
+    requires util::is_serializable_number_v<std::remove_cvref_t<T>>
+    static inline constexpr void deserialize(T& obj, serializer_context& ctx)
+    noexcept(noexcept(ctx.backend_->read_number(obj)))
+    {
+        ctx.backend_->read_number(obj);
+    }
+
+    template <typename T>
+    requires std::is_enum_v<std::remove_cvref_t<T>> && format_enum_as_string_v<SerializerSettings>
+    static inline constexpr void serialize(const T& obj, serializer_context& ctx)
+    {
+        ctx.backend_->write_string(util::enum_to_string(obj));
+    }
+
+    template <typename T>
+    requires std::is_enum_v<std::remove_cvref_t<T>> && (!format_enum_as_string_v<SerializerSettings>)
+    static inline constexpr void serialize(const T& obj, serializer_context& ctx)
+    noexcept(noexcept(ctx.backend_->write_number(static_cast<std::underlying_type_t<std::remove_cvref_t<T>>>(obj))))
+    {
+        ctx.backend_->write_number(static_cast<std::underlying_type_t<std::remove_cvref_t<T>>>(obj));
     }
         
     template <typename T>
-    requires std::is_enum_v<std::remove_cvref_t<T>>
-    static REFLEXX_INLINE_CONSTEXPR void deserialize(T& obj, serializer_context& ctx)
+    requires std::is_enum_v<std::remove_cvref_t<T>> && format_enum_as_string_v<SerializerSettings>
+    static inline constexpr void deserialize(T& obj, serializer_context& ctx)
     {
-        using TEnum = std::remove_cvref_t<T>;
-        using TIntegral = std::underlying_type_t<TEnum>;
+        obj = util::string_to_enum<std::remove_cvref_t<T>>(ctx.backend_->read_string());
+    }
 
-        if constexpr (format_enum_as_string_v<SerializerSettings>)
-        {
-            obj = util::string_to_enum<TEnum>(ctx.backend_->read_string());
-        }
-        else
-        {
-            TIntegral value {};
-            ctx.backend_->read_number(value);
-            obj = static_cast<TEnum>(value);
-        }
+    template <typename T>
+    requires std::is_enum_v<std::remove_cvref_t<T>> && (!format_enum_as_string_v<SerializerSettings>)
+    static inline constexpr void deserialize(T& obj, serializer_context& ctx)
+    noexcept(noexcept(ctx.backend_->read_number(std::declval<std::underlying_type_t<std::remove_cvref_t<T>>&>())))
+    {
+        using TIntegral = std::underlying_type_t<std::remove_cvref_t<T>>;
+
+        TIntegral value {};
+        ctx.backend_->read_number(value);
+        obj = static_cast<std::remove_cvref_t<T>>(value);
     }
 
     template <typename T>
     requires util::is_non_serializable_category_type_v<std::remove_cvref_t<T>>
-    static REFLEXX_INLINE_CONSTEXPR void serialize(const T& obj, serializer_context& ctx)
+    static inline constexpr void serialize(const T& obj, serializer_context& ctx) noexcept
     {
         static_assert_category_type<std::remove_cvref_t<T>>();
     }
 
     template <typename T>
     requires util::is_non_serializable_category_type_v<std::remove_cvref_t<T>>
-    static REFLEXX_INLINE_CONSTEXPR void deserialize(T& obj, serializer_context& ctx)
+    static inline constexpr void deserialize(T& obj, serializer_context& ctx) noexcept
     {
         static_assert_category_type<std::remove_cvref_t<T>>();
     }

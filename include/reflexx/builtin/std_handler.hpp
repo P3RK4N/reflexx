@@ -4,7 +4,9 @@
 #include <ctime>
 #include <experimental/meta>
 #include <string>
+#include <string_view>
 #include <type_traits>
+#include <utility>
 #include <vector>
 #include <deque>
 #include <list>
@@ -20,6 +22,7 @@
 #include "reflexx/provider.hpp"
 #include "reflexx/util/move_construct_if_possible.hpp"
 
+// TODO: Handle noexcept?
 // TODO: shared_ptr, unique_ptr
 
 namespace reflexx {
@@ -27,13 +30,20 @@ namespace reflexx {
 template <typename TSerializer, bool IsReading>
 struct std_handler : type_handler<TSerializer, IsReading>
 {    
-    void serialize(std::string& v)
+    inline constexpr void serialize(std::string& v) const
+    noexcept(noexcept(this->serialize_string(v)))
     {
         this->serialize_string(v);        
     }
 
     template <typename T1, typename T2>
-    void serialize(std::pair<T1, T2>& pair)
+    inline constexpr void serialize(std::pair<T1, T2>& pair) const
+    noexcept(
+        noexcept(this->begin_array()) && 
+        noexcept(this->end_array()) &&
+        noexcept(this->serialize_object(pair.first)) &&
+        noexcept(this->serialize_object(pair.second))
+    )
     {
         this->begin_array();
 
@@ -44,7 +54,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
     }
 
     template <typename T>
-    void serialize(std::optional<T>& opt)
+    inline constexpr void serialize(std::optional<T>& opt) const
     {
         if constexpr (IsReading)
         {
@@ -89,7 +99,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
     }
 
     template <typename... Ts>
-    void serialize(std::tuple<Ts...>& tuple)
+    inline constexpr void serialize(std::tuple<Ts...>& tuple) const
     {
         this->begin_array();
 
@@ -102,7 +112,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
     }
 
     template <typename... Types>
-    void serialize(std::variant<Types...>& var)
+    inline constexpr void serialize(std::variant<Types...>& var) const
     {
         this->begin_array();
 
@@ -137,7 +147,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
      */
 
     template <typename T, typename Alloc>
-    void serialize(std::vector<T, Alloc>& vec)
+    inline constexpr void serialize(std::vector<T, Alloc>& vec) const
     {
         this->begin_array();
 
@@ -162,7 +172,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
     }
 
     template <typename T, typename Alloc>
-    void serialize(std::deque<T, Alloc>& deq)
+    inline constexpr void serialize(std::deque<T, Alloc>& deq) const
     {
         this->begin_array();
 
@@ -187,7 +197,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
     }
 
     template <typename T, typename Alloc>
-    void serialize(std::list<T, Alloc>& lst)
+    inline constexpr void serialize(std::list<T, Alloc>& lst) const
     {
         this->begin_array();
 
@@ -212,7 +222,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
     }
 
     template <typename T, typename Alloc>
-    void serialize(std::forward_list<T, Alloc>& flst)
+    inline constexpr void serialize(std::forward_list<T, Alloc>& flst) const
     {
         this->begin_array();
 
@@ -238,7 +248,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
     }
 
     template <typename T, std::size_t N>
-    void serialize(std::array<T, N>& arr)
+    inline constexpr void serialize(std::array<T, N>& arr) const
     {
         this->begin_array();
 
@@ -252,7 +262,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
     }
 
     template <typename T>
-    void serialize(std::valarray<T>& arr)
+    inline constexpr void serialize(std::valarray<T>& arr) const
     {
         this->begin_object();
         
@@ -284,21 +294,21 @@ struct std_handler : type_handler<TSerializer, IsReading>
 
     template <typename T>
     requires util::is_std_map_v<T>
-    void serialize(T& map)
+    inline constexpr void serialize(T& map) const
     {
         this->serialize_map(map);
     }
 
     template <typename T>
     requires util::is_std_set_v<T>
-    void serialize(T& set)
+    inline constexpr void serialize(T& set) const
     {
         this->serialize_set(set);
     }
 
     template <typename TMap>
     requires (!std::is_same_v<typename TMap::key_type, std::string>)
-    void serialize_map(TMap& map)
+    inline constexpr void serialize_map(TMap& map) const
     {
         using K = typename TMap::key_type;
         using V = typename TMap::mapped_type;
@@ -334,7 +344,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
 
     template <typename TMap>
     requires std::is_same_v<typename TMap::key_type, std::string>
-    void serialize_map(TMap& map)
+    inline constexpr void serialize_map(TMap& map) const
     {
         using K = typename TMap::key_type;
         using V = typename TMap::mapped_type;
@@ -368,7 +378,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
     }    
 
     template <typename TSet>
-    void serialize_set(TSet& set)
+    inline constexpr void serialize_set(TSet& set) const
     {
         using T = typename TSet::value_type;
 

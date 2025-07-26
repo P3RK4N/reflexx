@@ -4,8 +4,7 @@
 #include <string_view>
 
 #include "reflexx/declare.hpp"
-
-// TODO: Update with <stdfloat>
+#include "reflexx/util/serializable_number.hpp"
 
 namespace reflexx
 {
@@ -21,129 +20,115 @@ private:
     
 protected:
     template <typename T>
-    constexpr inline void serialize_object(T& obj) const requires IsReading 
-    { 
+    constexpr inline void serialize_object(T& obj) const 
+    noexcept(noexcept(TSerializer::deserialize(obj, *__ctx__))) requires IsReading
+    {
         TSerializer::deserialize(obj, *__ctx__);
     }
 
     template <typename T>
-    constexpr inline void serialize_object(const T& obj) const requires IsWriting
+    constexpr inline void serialize_object(const T& obj) const
+    noexcept(noexcept(TSerializer::serialize(obj, *__ctx__))) requires IsWriting
     { 
         TSerializer::serialize(obj, *__ctx__);
     }
 
     constexpr inline void key(std::string_view key) const 
+    noexcept(noexcept(__ctx__->backend_->read_key(key))) requires IsReading
     {
-        if constexpr (IsReading)
-        {
-            __ctx__->backend_->read_key(key);
-        }
-        else
-        {
-            __ctx__->backend_->write_key(key);
-        }
+        __ctx__->backend_->read_key(key);
     }
 
-    constexpr inline void begin_array() const 
+    constexpr inline void key(std::string_view key) const
+    noexcept(noexcept(__ctx__->backend_->write_key(key))) requires IsWriting
     {
-        if constexpr (IsReading)
-        {
-            __ctx__->backend_->read_begin_array();
-        }
-        else
-        {
-            __ctx__->backend_->write_begin_array();
-        }
+        __ctx__->backend_->write_key(key);
     }
 
-    constexpr inline void end_array() const 
-    { 
-        if constexpr (IsReading)
-        {
-            __ctx__->backend_->read_end_array();
-        }
-        else
-        {
-            __ctx__->backend_->write_end_array();
-        }
+    constexpr inline void begin_array() const
+    noexcept(noexcept(__ctx__->backend_->read_begin_array())) requires IsReading
+    {
+        __ctx__->backend_->read_begin_array();
     }
 
-    constexpr inline void begin_object() const 
-    { 
-        if constexpr (IsReading)
-        {
-            __ctx__->backend_->read_begin_object();
-        }
-        else
-        {
-            __ctx__->backend_->write_begin_object();
-        }
+    constexpr inline void begin_array() const
+    noexcept(noexcept(__ctx__->backend_->write_begin_array())) requires IsWriting
+    {
+        __ctx__->backend_->write_begin_array();
     }
 
-    constexpr inline void end_object() const 
-    { 
-        if constexpr (IsReading)
-        {
-            __ctx__->backend_->read_end_object();
-        }
-        else
-        {
-            __ctx__->backend_->write_end_object();
-        }
+    constexpr inline void end_array() const
+    noexcept(noexcept(__ctx__->backend_->read_end_array())) requires IsReading
+    {
+        __ctx__->backend_->read_end_array();
     }
 
-    constexpr inline void serialize_bool(bool& v) const requires IsReading 
-    { 
+    constexpr inline void end_array() const
+    noexcept(noexcept(__ctx__->backend_->write_end_array())) requires IsWriting
+    {
+        __ctx__->backend_->write_end_array();
+    }
+
+    constexpr inline void begin_object() const
+    noexcept(noexcept(__ctx__->backend_->read_begin_object())) requires IsReading
+    {
+        __ctx__->backend_->read_begin_object();
+    }
+
+    constexpr inline void begin_object() const
+    noexcept(noexcept(__ctx__->backend_->write_begin_object())) requires IsWriting
+    {
+        __ctx__->backend_->write_begin_object();
+    }
+
+    constexpr inline void end_object() const
+    noexcept(noexcept(__ctx__->backend_->read_end_object())) requires IsReading
+    {
+        __ctx__->backend_->read_end_object();
+    }
+
+    constexpr inline void end_object() const
+    noexcept(noexcept(__ctx__->backend_->write_end_object())) requires IsWriting
+    {
+        __ctx__->backend_->write_end_object();
+    }
+
+    constexpr inline void serialize_bool(bool& v) const
+    noexcept(noexcept(__ctx__->backend_->read_bool(v))) requires IsReading
+    {
         __ctx__->backend_->read_bool(v);
     }
 
-    constexpr inline void serialize_bool(bool v) const requires IsWriting
-    { 
+    constexpr inline void serialize_bool(bool v) const
+    noexcept(noexcept(__ctx__->backend_->write_bool(v))) requires IsWriting
+    {
         __ctx__->backend_->write_bool(v);
     }
 
-    constexpr inline void serialize_string(std::string& v) const requires IsReading
+    constexpr inline void serialize_string(std::string& v) const
+    noexcept(noexcept(v = __ctx__->backend_->read_string())) requires IsReading
     { 
         v = __ctx__->backend_->read_string();
     }
 
-    constexpr inline void serialize_string(std::string_view v) const requires IsWriting 
-    { 
+    constexpr inline void serialize_string(std::string_view v) const
+    noexcept(noexcept(__ctx__->backend_->write_string(v))) requires IsWriting
+    {
         __ctx__->backend_->write_string(v);
     }
-    
-    template <typename T>
-    requires std::is_arithmetic_v<T>
-    constexpr inline void serialize_number(T value) const requires IsWriting
+
+    template <util::SerializableNumber T>
+    constexpr inline void serialize_number(T& value) const 
+    noexcept(noexcept(__ctx__->backend_->write_number(value))) requires IsReading
     {
-        if      constexpr (std::is_same_v<T, std::int8_t>)      __ctx__->backend_->write_number(value);
-        else if constexpr (std::is_same_v<T, std::int16_t>)     __ctx__->backend_->write_number(value);
-        else if constexpr (std::is_same_v<T, std::int32_t>)     __ctx__->backend_->write_number(value);
-        else if constexpr (std::is_same_v<T, std::int64_t>)     __ctx__->backend_->write_number(value);
-        else if constexpr (std::is_same_v<T, std::uint8_t>)     __ctx__->backend_->write_number(value);
-        else if constexpr (std::is_same_v<T, std::uint16_t>)    __ctx__->backend_->write_number(value);
-        else if constexpr (std::is_same_v<T, std::uint32_t>)    __ctx__->backend_->write_number(value);
-        else if constexpr (std::is_same_v<T, std::uint64_t>)    __ctx__->backend_->write_number(value);
-        else if constexpr (std::is_same_v<T, float>)            __ctx__->backend_->write_number(value);
-        else if constexpr (std::is_same_v<T, double>)           __ctx__->backend_->write_number(value);
-        else static_assert(false, "Unsupported number type in write_number");
+        __ctx__->backend_->read_number(value);
     }
 
-    template <typename T>
-    requires std::is_arithmetic_v<T>
-    constexpr inline void serialize_number(T& value) const requires IsReading
+    template <util::SerializableNumber T>
+    constexpr inline void serialize_number(T value) const 
+    noexcept(noexcept(__ctx__->backend_->write_number(value))) requires IsWriting
     {
-        if      constexpr (std::is_same_v<T, std::int8_t>)      __ctx__->backend_->read_number(value);
-        else if constexpr (std::is_same_v<T, std::int16_t>)     __ctx__->backend_->read_number(value);
-        else if constexpr (std::is_same_v<T, std::int32_t>)     __ctx__->backend_->read_number(value);
-        else if constexpr (std::is_same_v<T, std::int64_t>)     __ctx__->backend_->read_number(value);
-        else if constexpr (std::is_same_v<T, std::uint8_t>)     __ctx__->backend_->read_number(value);
-        else if constexpr (std::is_same_v<T, std::uint16_t>)    __ctx__->backend_->read_number(value);
-        else if constexpr (std::is_same_v<T, std::uint32_t>)    __ctx__->backend_->read_number(value);
-        else if constexpr (std::is_same_v<T, std::uint64_t>)    __ctx__->backend_->read_number(value);
-        else if constexpr (std::is_same_v<T, float>)            __ctx__->backend_->read_number(value);
-        else if constexpr (std::is_same_v<T, double>)           __ctx__->backend_->read_number(value);
-        else static_assert(false, "Unsupported number type in read_number");
+        __ctx__->backend_->write_number(value);
     }
 
     /**
@@ -153,6 +138,7 @@ protected:
      */
 
     constexpr inline void serialize_null() const 
+    noexcept(noexcept(__ctx__->backend_->write_null()))
     { 
         static_assert(IsWriting, "serialize_null is only callable in Write/Serialize mode!");
         __ctx__->backend_->write_null();
@@ -164,25 +150,29 @@ protected:
      * ###################################################
      */
 
-    constexpr inline bool is_null() const 
+    constexpr inline bool is_null() const
+    noexcept(noexcept(__ctx__->backend_->read_is_null()))
     {
         static_assert(IsReading, "is_null is only callable in Read/Deserialize mode!");
         return __ctx__->backend_->read_is_null();
     }
 
     constexpr inline void skip() const
+    noexcept(noexcept(__ctx__->backend_->read_skip()))
     {
         static_assert(IsReading, "skip is only callable in Read/Deserialize mode!");
         return __ctx__->backend_->read_skip(); 
     }
 
     constexpr inline bool has_next() const
+    noexcept(noexcept(__ctx__->backend_->read_has_next()))
     {
         static_assert(IsReading, "has_next is only callable in Read/Deserialize mode!");
         return __ctx__->backend_->read_has_next();
     }
 
     constexpr inline std::string_view key() const
+    noexcept(noexcept(__ctx__->backend_->read_key()))
     {
         static_assert(IsReading, "key(void) is only callable in Read/Deserialize mode!");
         return __ctx__->backend_->read_key();

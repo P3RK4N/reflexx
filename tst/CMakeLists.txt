@@ -27,6 +27,7 @@ add_executable(reflexx_runtime_tests
     "runtime/util/class_util_test.cpp"
     "runtime/util/enum_conv_test.cpp"
     "runtime/util/non_serializable_category_type_test.cpp"
+    "runtime/util/serializable_number_test.cpp"
     "runtime/util/move_construct_if_possible_test.cpp"
     "runtime/util/std_util_test.cpp"
 )

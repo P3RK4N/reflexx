@@ -31,14 +31,14 @@ public:
         val_cache = yyjson_doc_get_root(read_doc);
     }
 
-    inline ~yyjson_backend()
+    inline ~yyjson_backend() noexcept
     {
         if (write_doc)      yyjson_mut_doc_free(write_doc);
         if (read_doc)       yyjson_doc_free(read_doc);
         if (write_result)   free((void*)write_result);
     }
 
-    inline std::string_view get()
+    inline std::string_view get() noexcept
     {
         write_result = write_result ? write_result : yyjson_mut_write(write_doc, YYJSON_WRITE_PRETTY, &write_result_size);
 
@@ -51,7 +51,7 @@ public:
     *   ###################################
     */
 
-    inline void write_key(std::string_view sv)
+    inline void write_key(std::string_view sv) noexcept
     {
         key_cache = sv;
     }
@@ -63,7 +63,7 @@ public:
         write_stack.push_back(arr);
     }
 
-    inline void write_end_array()
+    inline void write_end_array() noexcept
     {
         write_stack.pop_back();
     }
@@ -75,14 +75,14 @@ public:
         write_stack.push_back(obj);
     }
 
-    inline void write_end_object()
+    inline void write_end_object() noexcept
     {
         write_stack.pop_back();
     }
 
     template <typename T>
     requires std::is_arithmetic_v<T>
-    inline void write_number(T val)
+    inline void write_number(T val) noexcept
     {
         if constexpr (std::is_floating_point_v<T>)
         {
@@ -98,17 +98,17 @@ public:
         }
     }
 
-    inline void write_bool(bool b)
+    inline void write_bool(bool b) noexcept
     {
         append_value(yyjson_mut_bool(write_doc, b));
     }
 
-    inline void write_string(std::string_view sv)
+    inline void write_string(std::string_view sv) noexcept
     {
         append_value(yyjson_mut_strn(write_doc, sv.data(), sv.size()));
     }
     
-    inline void write_null()
+    inline void write_null() noexcept
     {
         append_value(yyjson_mut_null(write_doc));
     }
@@ -119,12 +119,12 @@ public:
     *   ###################################
     */
 
-    inline void read_key(std::string_view key)
+    inline void read_key(std::string_view key) noexcept
     {
         val_cache = yyjson_obj_getn(read_stack.back().val, key.data(), key.size());
     }
 
-    inline std::string_view read_key()
+    inline std::string_view read_key() noexcept
     {
         auto key = yyjson_obj_iter_next(&std::get<yyjson_obj_iter>(read_stack.back().iter));
         val_cache = yyjson_obj_iter_get_val(key);
@@ -138,7 +138,7 @@ public:
         read_stack.push_back({ val_cache, yyjson_arr_iter_with(val_cache) });
     }
     
-    inline void read_end_array()
+    inline void read_end_array() noexcept
     {
         read_stack.pop_back();
     }
@@ -150,14 +150,14 @@ public:
         read_stack.push_back({ val_cache, yyjson_obj_iter_with(val_cache) });
     }
 
-    inline void read_end_object()
+    inline void read_end_object() noexcept
     {
         read_stack.pop_back();
     }
 
     template <typename T>
     requires std::is_arithmetic_v<T>
-    inline void read_number(T& val)
+    inline void read_number(T& val) noexcept
     {
         scoped_val_cacher _ { this };
 
@@ -175,33 +175,33 @@ public:
         }
     }
 
-    inline void read_bool(bool& b)
+    inline void read_bool(bool& b) noexcept
     {
         scoped_val_cacher _ { this };
 
         b = unsafe_yyjson_get_bool(val_cache);
     }
 
-    inline std::string_view read_string()
+    inline std::string_view read_string() noexcept
     {
         scoped_val_cacher _ { this };
 
         return { unsafe_yyjson_get_str(val_cache), unsafe_yyjson_get_len(val_cache) };
     }
 
-    inline bool read_is_null()
+    inline bool read_is_null() noexcept
     {
         val_cache = val_cache ? val_cache : yyjson_arr_iter_next(&std::get<yyjson_arr_iter>(read_stack.back().iter));
 
         return unsafe_yyjson_is_null(val_cache);
     }
 
-    inline void read_skip()
+    inline void read_skip() noexcept
     {
         scoped_val_cacher _ { this };
     }
 
-    inline bool read_has_next()
+    inline bool read_has_next() noexcept
     {
         return unsafe_yyjson_is_arr(read_stack.back().val) ? 
             yyjson_arr_iter_has_next(&std::get<yyjson_arr_iter>(read_stack.back().iter)) :
@@ -225,20 +225,20 @@ private:
     * 
     * @note This helper is intended solely for array iterators.
     *       Iterating over objects or other types requires reading keys first,
-    *       which automatically populates the cache.
+    *       which populate the val_cache, preventing arr iteration.
     */
     struct scoped_val_cacher
     {
         yyjson_backend* _parent;
 
-        inline scoped_val_cacher(yyjson_backend* parent)
+        inline scoped_val_cacher(yyjson_backend* parent) noexcept
         : _parent(parent)
         {
             // If nullptr, we are in array
             _parent->val_cache = _parent->val_cache ? _parent->val_cache : yyjson_arr_iter_next(&std::get<yyjson_arr_iter>(_parent->read_stack.back().iter));
         }
 
-        inline ~scoped_val_cacher()
+        inline ~scoped_val_cacher() noexcept
         {
             _parent->val_cache = nullptr;
         }
@@ -256,7 +256,7 @@ private:
     std::string_view key_cache {};
     yyjson_val* val_cache {};
 
-    inline void append_value(yyjson_mut_val* val)
+    inline void append_value(yyjson_mut_val* val) noexcept
     {
         // No parent
         if (write_stack.empty())

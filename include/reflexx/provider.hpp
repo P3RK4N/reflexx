@@ -8,7 +8,7 @@ namespace reflexx {
 template <typename T>
 struct provider
 {
-    inline constexpr T operator()() const
+    inline constexpr T operator()() const noexcept(std::is_nothrow_default_constructible_v<T>)
     {
         static_assert(std::is_default_constructible_v<T>, "Type is not default constructible, consider specializing provider for it!");
         return {};

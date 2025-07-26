@@ -285,26 +285,6 @@ int main()
 
     benchmark(json_data,
         [](const std::string& data) {
-            using Serializer = reflexx::serializer<reflexx::serializer_settings::Strict(), reflexx::backends::yyjson_backend>;
-            CitmCatalog result;
-            Serializer::deserialize(result, data);
-        },
-        "Reflexx",
-        iterations
-    );
-
-    benchmark(_5mb,
-        [](const std::string& data) {
-            using Serializer = reflexx::serializer<reflexx::serializer_settings::Strict(), reflexx::backends::yyjson_backend>;
-            std::vector<User> result;
-            Serializer::deserialize(result, data);
-        },
-        "Reflexx",
-        iterations
-    );
-
-    benchmark(json_data,
-        [](const std::string& data) {
             CitmCatalog result;
             parse_citm_catalog(data, result);
         },
@@ -347,6 +327,27 @@ int main()
         "yyjson",
         iterations
     );    
+
+    
+    benchmark(json_data,
+        [](const std::string& data) {
+            using Serializer = reflexx::serializer<reflexx::serializer_settings::Strict(), reflexx::backends::yyjson_backend>;
+            CitmCatalog result;
+            Serializer::deserialize(result, data);
+        },
+        "Reflexx",
+        iterations
+    );
+
+    benchmark(_5mb,
+        [](const std::string& data) {
+            using Serializer = reflexx::serializer<reflexx::serializer_settings::Strict(), reflexx::backends::yyjson_backend>;
+            std::vector<User> result;
+            Serializer::deserialize(result, data);
+        },
+        "Reflexx",
+        iterations
+    );
 
     return 0;
 }

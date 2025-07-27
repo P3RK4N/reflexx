@@ -4,8 +4,8 @@
 #include <string_view>
 #include <cstddef>
 #include <span>
-#include <type_traits>
-#include <cassert>
+
+#include "reflexx/util/serializable_number.hpp"
 
 namespace reflexx {
 namespace backends {
@@ -20,7 +20,7 @@ struct placeholder_backend
     inline constexpr std::string_view  get()                           { return {};    }
 
     template <typename T>
-    requires std::is_arithmetic_v<T>
+    requires util::is_serializable_number_v<T>
     inline constexpr void              write_number(T)                 {               }
     inline constexpr void              write_key(std::string_view)     {               }
     inline constexpr void              write_begin_array()             {               }
@@ -32,7 +32,7 @@ struct placeholder_backend
     inline constexpr void              write_null()                    {               }
 
     template <typename T>
-    requires std::is_arithmetic_v<T>
+    requires util::is_serializable_number_v<T>
     inline constexpr void              read_number(T&)                 {               }
     inline constexpr void              read_key(std::string_view)      {               }
     inline constexpr std::string_view  read_key()                      { return {};    }

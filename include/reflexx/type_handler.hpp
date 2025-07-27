@@ -6,6 +6,8 @@
 #include "reflexx/declare.hpp"
 #include "reflexx/util/serializable_number.hpp"
 
+// TODO: Unify number and string serialization with serialize_object? -> Rethink string serialization
+
 namespace reflexx
 {
 
@@ -14,9 +16,10 @@ class type_handler
 {
 private:
     friend TSerializer;
+    using serializer_context_t = typename TSerializer::template serializer_context<IsReading>;
     static constexpr bool IsWriting = !IsReading;
 
-    typename TSerializer::serializer_context* __ctx__;
+    serializer_context_t* __ctx__;
     
 protected:
     template <typename T>

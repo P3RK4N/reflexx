@@ -3,6 +3,7 @@
 
 #include <ctime>
 #include <experimental/meta>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -21,9 +22,9 @@
 #include "reflexx/util/std_util.hpp"
 #include "reflexx/provider.hpp"
 #include "reflexx/util/move_construct_if_possible.hpp"
+#include "reflexx/util/enumerate.hpp"
 
 // TODO: Handle noexcept?
-// TODO: shared_ptr, unique_ptr
 
 namespace reflexx {
 
@@ -74,28 +75,58 @@ struct std_handler : type_handler<TSerializer, IsReading>
         }
         else
         {
-            if (opt.has_value())
-            {
-                this->serialize_object(*opt);   
-            }
-            else
-            {
-                this->serialize_null();
-            }
+            opt.has_value() ? this->serialize_object(*opt) : this->serialize_null();
         }
     }
 
-    template <std::size_t N>
-    consteval static std::span<const std::size_t> enumerate()
+    template <typename T>
+    inline constexpr void serialize(std::shared_ptr<T>& ptr) const
     {
-        std::array<std::size_t, N> arr;
-
-        for (std::size_t i = 0; i < N; ++i)
+        if constexpr (IsReading)
         {
-            arr[i] = i;
+            if (this->is_null())
+            {
+                ptr.reset();
+                this->skip();
+            }
+            else
+            {
+                if (ptr == nullptr)
+                {
+                    ptr = std::make_shared<T>(provider<T>{}());
+                }
+                this->serialize_object(*ptr);
+            }
         }
+        else
+        {
+            ptr == nullptr ? this->serialize_null() : this->serialize_object(*ptr);
+        }
+    }
 
-        return std::define_static_array(arr);
+    template <typename T>
+    inline constexpr void serialize(std::unique_ptr<T>& ptr) const
+    {
+        if constexpr (IsReading)
+        {
+            if (this->is_null())
+            {
+                ptr.reset();
+                this->skip();
+            }
+            else
+            {
+                if (ptr == nullptr)
+                {
+                    ptr = std::make_unique<T>(provider<T>{}());
+                }
+                this->serialize_object(*ptr);
+            }
+        }
+        else
+        {
+            ptr == nullptr ? this->serialize_null() : this->serialize_object(*ptr);
+        }
     }
 
     template <typename... Ts>
@@ -103,7 +134,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
     {
         this->begin_array();
 
-        template for (constexpr auto i : enumerate<sizeof...(Ts)>())
+        template for (constexpr auto i : util::enumerate<sizeof...(Ts)>())
         {
             this->serialize_object(std::get<i>(tuple));
         }
@@ -121,7 +152,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
             std::size_t index{};
             this->serialize_number(index);
 
-            template for (constexpr auto i : enumerate<sizeof...(Types)>())
+            template for (constexpr auto i : util::enumerate<sizeof...(Types)>())
             {
                 if (i == index)
                 {
@@ -253,7 +284,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
         this->begin_array();
 
         // MISC: "template for (auto& elem : arr)" not working?
-        template for (constexpr auto I : enumerate<N>())
+        template for (constexpr auto I : util::enumerate<N>())
         {
             this->serialize_object(arr[I]);
         }

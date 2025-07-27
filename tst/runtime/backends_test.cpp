@@ -72,6 +72,30 @@ void builtin_types_test()
         REQUIRE(!deserialized.has_value());
     }
 
+    SECTION("std::shared_ptr") {
+        std::shared_ptr<int> original = std::make_shared<int>(1337);
+        auto res = Serializer::serialize(original);
+
+        #ifdef REFLEXX_DEBUG_TEST_PRINT
+            std::println("std::shared_ptr -> {}", *res);
+        #endif
+
+        std::shared_ptr<int> deserialized = Serializer::template deserialize<std::shared_ptr<int>>(res.get());
+        REQUIRE(*original == *deserialized);
+    }
+
+    SECTION("std::unique_ptr") {
+        std::unique_ptr<int> original = std::make_unique<int>(1337);
+        auto res = Serializer::serialize(original);
+
+        #ifdef REFLEXX_DEBUG_TEST_PRINT
+            std::println("std::unique_ptr -> {}", *res);
+        #endif
+
+        std::unique_ptr<int> deserialized = Serializer::template deserialize<std::unique_ptr<int>>(res.get());
+        REQUIRE(*original == *deserialized);
+    }
+
     SECTION("std::tuple") {
         std::tuple<int, std::string, bool> original = {1, "test", true};
         auto res = Serializer::serialize(original);

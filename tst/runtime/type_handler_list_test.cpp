@@ -46,11 +46,8 @@ TEST_CASE("type_handler_list resolves first matching handler", "[get_first_t]")
 {
     using List = reflexx::type_handler_list<handler_B, handler_A>;
 
-    using T1 = List::get_first_t<DummySerializer, false, B>;
-    STATIC_REQUIRE(std::is_same_v<T1, handler_B<DummySerializer, false>>);
-
-    using T2 = List::get_first_t<DummySerializer, true, A>;
-    STATIC_REQUIRE(std::is_same_v<T2, handler_A<DummySerializer, true>>);
+    STATIC_REQUIRE(List::get_first_index_v<DummySerializer, false, B> == 0);
+    STATIC_REQUIRE(List::get_first_index_v<DummySerializer, true, A> == 1);
 }
 
 TEST_CASE("append correctly adds new handler", "[append]")
@@ -58,8 +55,7 @@ TEST_CASE("append correctly adds new handler", "[append]")
     using L1 = reflexx::type_handler_list<handler_A>;
     using L2 = L1::append<handler_B>;
 
-    using T = L2::get_first_t<DummySerializer, false, B>;
-    STATIC_REQUIRE(std::is_same_v<T, handler_B<DummySerializer, false>>);
+    STATIC_REQUIRE(L2::get_first_index_v<DummySerializer, false, B> == 1);
 }
 
 TEST_CASE("extend merges handler lists", "[extend]")
@@ -68,7 +64,6 @@ TEST_CASE("extend merges handler lists", "[extend]")
     using L2 = reflexx::type_handler_list<handler_B>;
     using L3 = L1::extend<L2>;
 
-    using T = L3::get_first_t<DummySerializer, false, B>;
-    STATIC_REQUIRE(std::is_same_v<T, handler_B<DummySerializer, false>>);
+    STATIC_REQUIRE(L3::get_first_index_v<DummySerializer, false, B> == 1);
 }
 

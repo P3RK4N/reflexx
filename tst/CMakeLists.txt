@@ -30,6 +30,7 @@ add_executable(reflexx_runtime_tests
     "runtime/util/serializable_number_test.cpp"
     "runtime/util/move_construct_if_possible_test.cpp"
     "runtime/util/std_util_test.cpp"
+    "runtime/ptr_graph_handler_test.cpp"
 )
 set_target_properties(
     reflexx_runtime_tests 

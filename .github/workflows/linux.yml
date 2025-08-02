@@ -18,15 +18,15 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y ninja-build python3 cmake lld
+        sudo apt-get install -y ninja-build python3 cmake
 
     - name: Run setup script
-      run: python3 setup_env.py
+      run: python3 setup_env.py use_prebuilt_clang
 
     - name: Configure CMake (Ninja Multi-Config)
       run: |
         cmake -G "Ninja Multi-Config" \
-              -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/deps/clang-p2996-x86_64-unknown-linux-gnu/cmake/clang.toolchain.cmake" \
+              -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/cmake/clang.toolchain.cmake" \
               -B "${{ github.workspace }}/bin" \
               -S "${{ github.workspace }}"
 

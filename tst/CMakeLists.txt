@@ -31,6 +31,8 @@ add_executable(reflexx_runtime_tests
     "runtime/util/move_construct_if_possible_test.cpp"
     "runtime/util/std_util_test.cpp"
     "runtime/ptr_graph_handler_test.cpp"
+    # "runtime/builtin/handlers/default_handler_test.cpp"
+    # "runtime/annotations_test.cpp"
 )
 set_target_properties(
     reflexx_runtime_tests 
@@ -38,7 +40,8 @@ set_target_properties(
     CXX_STANDARD 26
     CXX_STANDARD_REQUIRED ON
 )
-target_link_libraries(reflexx_runtime_tests PRIVATE reflexx Catch2::Catch2WithMain)
+target_compile_options(reflexx_runtime_tests PRIVATE -g -O0 -fprofile-instr-generate -fcoverage-mapping -fno-inline -fno-omit-frame-pointer -fsanitize=address,undefined)
+target_link_libraries(reflexx_runtime_tests PRIVATE reflexx Catch2::Catch2WithMain -fprofile-instr-generate -fsanitize=address,undefined)
 catch_discover_tests(reflexx_runtime_tests)
 
 
@@ -66,6 +69,35 @@ foreach(source_file IN LISTS REFLEXX_COMPILE_TESTS)
         INCLUDE_DIRS "${reflexx_project_SOURCE_DIR}/include"
     )
 endforeach()
+
+############################################################
+####################### COVERAGE ###########################
+############################################################
+
+add_custom_target(reflexx_coverage
+    DEPENDS reflexx_runtime_tests
+
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/reflexx/coverage
+    
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/reflexx/coverage
+    
+    COMMAND ${CMAKE_COMMAND} -E env LLVM_PROFILE_FILE=${CMAKE_BINARY_DIR}/reflexx/coverage/default.profraw
+            $<TARGET_FILE:reflexx_runtime_tests>
+
+    COMMAND ${LLVM_PROFDATA} merge
+            --output=${CMAKE_BINARY_DIR}/reflexx/coverage/default.profdata
+            ${CMAKE_BINARY_DIR}/reflexx/coverage/default.profraw
+
+    COMMAND ${LLVM_COV} show
+            $<TARGET_FILE:reflexx_runtime_tests>
+            -instr-profile=${CMAKE_BINARY_DIR}/reflexx/coverage/default.profdata
+            -format=html
+            -output-dir=${CMAKE_BINARY_DIR}/reflexx/coverage
+            -compilation-dir=${CMAKE_SOURCE_DIR}
+            ${reflexx_project_SOURCE_DIR}/include
+    COMMENT "Generating coverage report..."
+    VERBATIM
+)
 
 ############################################################
 ###################### BENCHMARK ###########################

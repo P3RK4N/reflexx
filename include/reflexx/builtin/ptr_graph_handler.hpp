@@ -14,7 +14,7 @@ namespace reflexx {
 // Assumes unique pointers wont end up in cycle
 
 template <typename TSerializer, bool IsReading>
-struct ptr_graph_handler : type_handler<TSerializer, IsReading>
+struct [[deprecated("ptr_graph_handler is deprecated! Consider not serializing objects with cycles since they can cause memory leaks!")]] ptr_graph_handler : type_handler<TSerializer, IsReading>
 {
     std::map<std::uint64_t, std::shared_ptr<void>> handled_objs {};
 

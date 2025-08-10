@@ -37,101 +37,101 @@ protected:
     }
 
     constexpr inline void key(std::string_view key) const 
-    noexcept(noexcept(__ctx__->backend_->read_key(key))) requires IsReading
+    noexcept(noexcept(__ctx__->backend_.read_key(key))) requires IsReading
     {
-        __ctx__->backend_->read_key(key);
+        __ctx__->backend_.read_key(key);
     }
 
     constexpr inline void key(std::string_view key) const
-    noexcept(noexcept(__ctx__->backend_->write_key(key))) requires IsWriting
+    noexcept(noexcept(__ctx__->backend_.write_key(key))) requires IsWriting
     {
-        __ctx__->backend_->write_key(key);
+        __ctx__->backend_.write_key(key);
     }
 
     constexpr inline void begin_array() const
-    noexcept(noexcept(__ctx__->backend_->read_begin_array())) requires IsReading
+    noexcept(noexcept(__ctx__->backend_.read_begin_array())) requires IsReading
     {
-        __ctx__->backend_->read_begin_array();
+        __ctx__->backend_.read_begin_array();
     }
 
     constexpr inline void begin_array() const
-    noexcept(noexcept(__ctx__->backend_->write_begin_array())) requires IsWriting
+    noexcept(noexcept(__ctx__->backend_.write_begin_array())) requires IsWriting
     {
-        __ctx__->backend_->write_begin_array();
+        __ctx__->backend_.write_begin_array();
     }
 
     constexpr inline void end_array() const
-    noexcept(noexcept(__ctx__->backend_->read_end_array())) requires IsReading
+    noexcept(noexcept(__ctx__->backend_.read_end_array())) requires IsReading
     {
-        __ctx__->backend_->read_end_array();
+        __ctx__->backend_.read_end_array();
     }
 
     constexpr inline void end_array() const
-    noexcept(noexcept(__ctx__->backend_->write_end_array())) requires IsWriting
+    noexcept(noexcept(__ctx__->backend_.write_end_array())) requires IsWriting
     {
-        __ctx__->backend_->write_end_array();
+        __ctx__->backend_.write_end_array();
     }
 
     constexpr inline void begin_object() const
-    noexcept(noexcept(__ctx__->backend_->read_begin_object())) requires IsReading
+    noexcept(noexcept(__ctx__->backend_.read_begin_object())) requires IsReading
     {
-        __ctx__->backend_->read_begin_object();
+        __ctx__->backend_.read_begin_object();
     }
 
     constexpr inline void begin_object() const
-    noexcept(noexcept(__ctx__->backend_->write_begin_object())) requires IsWriting
+    noexcept(noexcept(__ctx__->backend_.write_begin_object())) requires IsWriting
     {
-        __ctx__->backend_->write_begin_object();
+        __ctx__->backend_.write_begin_object();
     }
 
     constexpr inline void end_object() const
-    noexcept(noexcept(__ctx__->backend_->read_end_object())) requires IsReading
+    noexcept(noexcept(__ctx__->backend_.read_end_object())) requires IsReading
     {
-        __ctx__->backend_->read_end_object();
+        __ctx__->backend_.read_end_object();
     }
 
     constexpr inline void end_object() const
-    noexcept(noexcept(__ctx__->backend_->write_end_object())) requires IsWriting
+    noexcept(noexcept(__ctx__->backend_.write_end_object())) requires IsWriting
     {
-        __ctx__->backend_->write_end_object();
+        __ctx__->backend_.write_end_object();
     }
 
     constexpr inline void serialize_bool(bool& v) const
-    noexcept(noexcept(__ctx__->backend_->read_bool(v))) requires IsReading
+    noexcept(noexcept(__ctx__->backend_.read_bool(v))) requires IsReading
     {
-        __ctx__->backend_->read_bool(v);
+        __ctx__->backend_.read_bool(v);
     }
 
     constexpr inline void serialize_bool(bool v) const
-    noexcept(noexcept(__ctx__->backend_->write_bool(v))) requires IsWriting
+    noexcept(noexcept(__ctx__->backend_.write_bool(v))) requires IsWriting
     {
-        __ctx__->backend_->write_bool(v);
+        __ctx__->backend_.write_bool(v);
     }
 
     constexpr inline void serialize_string(std::string& v) const
-    noexcept(noexcept(v = __ctx__->backend_->read_string())) requires IsReading
+    noexcept(noexcept(v = __ctx__->backend_.read_string())) requires IsReading
     { 
-        v = __ctx__->backend_->read_string();
+        v = __ctx__->backend_.read_string();
     }
 
     constexpr inline void serialize_string(std::string_view v) const
-    noexcept(noexcept(__ctx__->backend_->write_string(v))) requires IsWriting
+    noexcept(noexcept(__ctx__->backend_.write_string(v))) requires IsWriting
     {
-        __ctx__->backend_->write_string(v);
+        __ctx__->backend_.write_string(v);
     }
 
     template <util::SerializableNumber T>
     constexpr inline void serialize_number(T& value) const 
-    noexcept(noexcept(__ctx__->backend_->write_number(value))) requires IsReading
+    noexcept(noexcept(__ctx__->backend_.write_number(value))) requires IsReading
     {
-        __ctx__->backend_->read_number(value);
+        __ctx__->backend_.read_number(value);
     }
 
     template <util::SerializableNumber T>
     constexpr inline void serialize_number(T value) const 
-    noexcept(noexcept(__ctx__->backend_->write_number(value))) requires IsWriting
+    noexcept(noexcept(__ctx__->backend_.write_number(value))) requires IsWriting
     {
-        __ctx__->backend_->write_number(value);
+        __ctx__->backend_.write_number(value);
     }
 
     /**
@@ -141,10 +141,10 @@ protected:
      */
 
     constexpr inline void serialize_null() const 
-    noexcept(noexcept(__ctx__->backend_->write_null()))
+    noexcept(noexcept(__ctx__->backend_.write_null()))
     { 
         static_assert(IsWriting, "serialize_null is only callable in Write/Serialize mode!");
-        __ctx__->backend_->write_null();
+        __ctx__->backend_.write_null();
     }
 
     /**
@@ -154,31 +154,31 @@ protected:
      */
 
     constexpr inline bool is_null() const
-    noexcept(noexcept(__ctx__->backend_->read_is_null()))
+    noexcept(noexcept(__ctx__->backend_.read_is_null()))
     {
         static_assert(IsReading, "is_null is only callable in Read/Deserialize mode!");
-        return __ctx__->backend_->read_is_null();
+        return __ctx__->backend_.read_is_null();
     }
 
     constexpr inline void skip() const
-    noexcept(noexcept(__ctx__->backend_->read_skip()))
+    noexcept(noexcept(__ctx__->backend_.read_skip()))
     {
         static_assert(IsReading, "skip is only callable in Read/Deserialize mode!");
-        return __ctx__->backend_->read_skip(); 
+        return __ctx__->backend_.read_skip(); 
     }
 
     constexpr inline bool has_next() const
-    noexcept(noexcept(__ctx__->backend_->read_has_next()))
+    noexcept(noexcept(__ctx__->backend_.read_has_next()))
     {
         static_assert(IsReading, "has_next is only callable in Read/Deserialize mode!");
-        return __ctx__->backend_->read_has_next();
+        return __ctx__->backend_.read_has_next();
     }
 
     constexpr inline std::string_view key() const
-    noexcept(noexcept(__ctx__->backend_->read_key()))
+    noexcept(noexcept(__ctx__->backend_.read_key()))
     {
         static_assert(IsReading, "key(void) is only callable in Read/Deserialize mode!");
-        return __ctx__->backend_->read_key();
+        return __ctx__->backend_.read_key();
     }
 };
 

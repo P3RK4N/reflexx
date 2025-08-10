@@ -39,6 +39,7 @@ set_target_properties(
     PROPERTIES
     CXX_STANDARD 26
     CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
 )
 target_compile_options(reflexx_runtime_tests PRIVATE -g -O0 -fprofile-instr-generate -fcoverage-mapping -fno-inline -fno-omit-frame-pointer -fsanitize=address,undefined)
 target_link_libraries(reflexx_runtime_tests PRIVATE reflexx Catch2::Catch2WithMain -fprofile-instr-generate -fsanitize=address,undefined)
@@ -111,5 +112,14 @@ set_target_properties(
     PROPERTIES
     CXX_STANDARD 26
     CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
 )
 target_link_libraries(reflexx_benchmark PRIVATE reflexx)
+
+foreach(json_file IN ITEMS "5mb.json" "citm_catalog.json")
+    add_custom_command(TARGET reflexx_benchmark POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "${CMAKE_CURRENT_LIST_DIR}/benchmark/${json_file}"
+            $<TARGET_FILE_DIR:reflexx_benchmark>/${json_file}
+    )
+endforeach()

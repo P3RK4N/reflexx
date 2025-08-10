@@ -7,7 +7,6 @@
 #include "catch2/catch_test_macros.hpp"
 #include "reflexx/serializer_settings.hpp"
 #include "reflexx/serializer.hpp"
-#include "reflexx/backends/placeholder.hpp"
 #include "reflexx/backends/yyjson_backend.hpp"
 
 template <typename... Ts>

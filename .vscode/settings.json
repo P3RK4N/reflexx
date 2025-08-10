@@ -9,8 +9,8 @@
     "clangd.arguments": 
     [
         "--compile-commands-dir=${workspaceFolder}/bin",
-        "-log=verbose", 
+        "--log=verbose", 
         "-pretty", 
-        "--background-index"
-    ],
+        "--background-index=false",
+    ]
 }

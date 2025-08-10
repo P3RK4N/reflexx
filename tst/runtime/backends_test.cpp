@@ -18,6 +18,7 @@
 #include "reflexx/backends/yyjson_backend.hpp"
 
 // #define REFLEXX_DEBUG_TEST_PRINT
+using namespace reflexx;
 
 template <reflexx::IsBackendType TBackend>
 void builtin_types_test()
@@ -32,8 +33,8 @@ void builtin_types_test()
             std::println("std::string -> {}", *res);
         #endif
 
-        std::string deserialized = Serializer::template deserialize<std::string>(res.get());
-        REQUIRE(original == deserialized);
+        result_holder<std::string> deserialized = Serializer::template deserialize<std::string>(res.get());
+        REQUIRE(original == *deserialized);
     }
 
     SECTION("std::pair") {
@@ -44,8 +45,8 @@ void builtin_types_test()
             std::println("std::pair -> {}", *res);
         #endif
 
-        std::pair<int, std::string> deserialized = Serializer::template deserialize<std::pair<int, std::string>>(res.get());
-        REQUIRE(original == deserialized);
+        result_holder<std::pair<int, std::string>> deserialized = Serializer::template deserialize<std::pair<int, std::string>>(res.get());
+        REQUIRE(original == *deserialized);
     }
 
     SECTION("std::optional") {
@@ -56,8 +57,8 @@ void builtin_types_test()
             std::println("std::optional -> {}", *res);
         #endif
 
-        std::optional<int> deserialized = Serializer::template deserialize<std::optional<int>>(res.get());
-        REQUIRE(original == deserialized);
+        result_holder<std::optional<int>> deserialized = Serializer::template deserialize<std::optional<int>>(res.get());
+        REQUIRE(original == *deserialized);
     }
 
     SECTION("std::optional (nullopt)") {
@@ -68,8 +69,8 @@ void builtin_types_test()
             std::println("std::optional (nullopt) -> {}", *res);
         #endif
 
-        std::optional<int> deserialized = Serializer::template deserialize<std::optional<int>>(res.get());
-        REQUIRE(!deserialized.has_value());
+        result_holder<std::optional<int>> deserialized = Serializer::template deserialize<std::optional<int>>(res.get());
+        REQUIRE(!deserialized.get().has_value());
     }
 
     SECTION("std::shared_ptr") {
@@ -80,8 +81,8 @@ void builtin_types_test()
             std::println("std::shared_ptr -> {}", *res);
         #endif
 
-        std::shared_ptr<int> deserialized = Serializer::template deserialize<std::shared_ptr<int>>(res.get());
-        REQUIRE(*original == *deserialized);
+        result_holder<std::shared_ptr<int>> deserialized = Serializer::template deserialize<std::shared_ptr<int>>(res.get());
+        REQUIRE(*original == **deserialized);
     }
 
     SECTION("std::unique_ptr") {
@@ -92,8 +93,8 @@ void builtin_types_test()
             std::println("std::unique_ptr -> {}", *res);
         #endif
 
-        std::unique_ptr<int> deserialized = Serializer::template deserialize<std::unique_ptr<int>>(res.get());
-        REQUIRE(*original == *deserialized);
+        result_holder<std::unique_ptr<int>> deserialized = Serializer::template deserialize<std::unique_ptr<int>>(res.get());
+        REQUIRE(*original == **deserialized);
     }
 
     SECTION("std::tuple") {
@@ -104,8 +105,8 @@ void builtin_types_test()
             std::println("std::tuple -> {}", *res);
         #endif
 
-        std::tuple<int, std::string, bool> deserialized = Serializer::template deserialize<std::tuple<int, std::string, bool>>(res.get());
-        REQUIRE(original == deserialized);
+        result_holder<std::tuple<int, std::string, bool>> deserialized = Serializer::template deserialize<std::tuple<int, std::string, bool>>(res.get());
+        REQUIRE(original == *deserialized);
     }
 
     SECTION("std::variant") {
@@ -116,8 +117,8 @@ void builtin_types_test()
             std::println("std::variant -> {}", *res);
         #endif
 
-        std::variant<int, std::string> deserialized = Serializer::template deserialize<std::variant<int, std::string>>(res.get());
-        REQUIRE(original == deserialized);
+        result_holder<std::variant<int, std::string>> deserialized = Serializer::template deserialize<std::variant<int, std::string>>(res.get());
+        REQUIRE(original == *deserialized);
     }
 
     SECTION("std::vector") {
@@ -128,8 +129,8 @@ void builtin_types_test()
             std::println("std::vector -> {}", *res);
         #endif
 
-        std::vector<int> deserialized = Serializer::template deserialize<std::vector<int>>(res.get());
-        REQUIRE(original == deserialized);
+        result_holder<std::vector<int>> deserialized = Serializer::template deserialize<std::vector<int>>(res.get());
+        REQUIRE(original == *deserialized);
     }
 
     SECTION("std::deque") {
@@ -140,8 +141,8 @@ void builtin_types_test()
             std::println("std::deque -> {}", *res);
         #endif
 
-        std::deque<int> deserialized = Serializer::template deserialize<std::deque<int>>(res.get());
-        REQUIRE(original == deserialized);
+        result_holder<std::deque<int>> deserialized = Serializer::template deserialize<std::deque<int>>(res.get());
+        REQUIRE(original == *deserialized);
     }
 
     SECTION("std::list") {
@@ -152,8 +153,8 @@ void builtin_types_test()
             std::println("std::list -> {}", *res);
         #endif
 
-        std::list<int> deserialized = Serializer::template deserialize<std::list<int>>(res.get());
-        REQUIRE(original == deserialized);
+        result_holder<std::list<int>> deserialized = Serializer::template deserialize<std::list<int>>(res.get());
+        REQUIRE(original == *deserialized);
     }
 
     SECTION("std::forward_list") {
@@ -164,8 +165,8 @@ void builtin_types_test()
             std::println("std::forward_list -> {}", *res);
         #endif
 
-        std::forward_list<int> deserialized = Serializer::template deserialize<std::forward_list<int>>(res.get());
-        REQUIRE(original == deserialized);
+        result_holder<std::forward_list<int>> deserialized = Serializer::template deserialize<std::forward_list<int>>(res.get());
+        REQUIRE(original == *deserialized);
     }
 
     SECTION("std::array") {
@@ -176,8 +177,8 @@ void builtin_types_test()
             std::println("std::array -> {}", *res);
         #endif
 
-        std::array<int, 3> deserialized = Serializer::template deserialize<std::array<int, 3>>(res.get());
-        REQUIRE(original == deserialized);
+        result_holder<std::array<int, 3>> deserialized = Serializer::template deserialize<std::array<int, 3>>(res.get());
+        REQUIRE(original == *deserialized);
     }
 
     SECTION("std::valarray") {
@@ -188,14 +189,14 @@ void builtin_types_test()
             std::println("std::valarray -> {}", *res);
         #endif
 
-        std::valarray<int> deserialized = Serializer::template deserialize<std::valarray<int>>(res.get());
+        result_holder<std::valarray<int>> deserialized = Serializer::template deserialize<std::valarray<int>>(res.get());
 
         auto valarray_equal = [](const auto& a, const auto& b) {
             return a.size() == b.size() &&
                std::equal(std::begin(a), std::end(a), std::begin(b));
         };
 
-        REQUIRE(valarray_equal(original, deserialized));
+        REQUIRE(valarray_equal(original, *deserialized));
     }
 
     SECTION("std::map") {
@@ -206,8 +207,8 @@ void builtin_types_test()
             std::println("std::map -> {}", *res);
         #endif
 
-        std::map<std::string, int> deserialized = Serializer::template deserialize<std::map<std::string, int>>(res.get());
-        REQUIRE(original == deserialized);
+        result_holder<std::map<std::string, int>> deserialized = Serializer::template deserialize<std::map<std::string, int>>(res.get());
+        REQUIRE(original == *deserialized);
     }
 
     SECTION("std::multimap") {
@@ -218,8 +219,8 @@ void builtin_types_test()
             std::println("std::multimap -> {}", *res);
         #endif
 
-        std::multimap<std::string, int> deserialized = Serializer::template deserialize<std::multimap<std::string, int>>(res.get());
-        REQUIRE(original == deserialized);
+        result_holder<std::multimap<std::string, int>> deserialized = Serializer::template deserialize<std::multimap<std::string, int>>(res.get());
+        REQUIRE(original == *deserialized);
     }
 
     SECTION("std::unordered_map") {
@@ -230,8 +231,8 @@ void builtin_types_test()
             std::println("std::unordered_map -> {}", *res);
         #endif
 
-        std::unordered_map<std::string, int> deserialized = Serializer::template deserialize<std::unordered_map<std::string, int>>(res.get());
-        REQUIRE(original == deserialized);
+        result_holder<std::unordered_map<std::string, int>> deserialized = Serializer::template deserialize<std::unordered_map<std::string, int>>(res.get());
+        REQUIRE(original == *deserialized);
     }
 
     SECTION("std::unordered_multimap") {
@@ -242,8 +243,8 @@ void builtin_types_test()
             std::println("std::unordered_multimap -> {}", *res);
         #endif
 
-        std::unordered_multimap<std::string, int> deserialized = Serializer::template deserialize<std::unordered_multimap<std::string, int>>(res.get());
-        REQUIRE(original == deserialized);
+        result_holder<std::unordered_multimap<std::string, int>> deserialized = Serializer::template deserialize<std::unordered_multimap<std::string, int>>(res.get());
+        REQUIRE(original == *deserialized);
     }
 
     SECTION("std::set") {
@@ -254,8 +255,8 @@ void builtin_types_test()
             std::println("std::set -> {}", *res);
         #endif
 
-        std::set<int> deserialized = Serializer::template deserialize<std::set<int>>(res.get());
-        REQUIRE(original == deserialized);
+        result_holder<std::set<int>> deserialized = Serializer::template deserialize<std::set<int>>(res.get());
+        REQUIRE(original == *deserialized);
     }
 
     SECTION("std::multiset") {
@@ -266,8 +267,8 @@ void builtin_types_test()
             std::println("std::multiset -> {}", *res);
         #endif
 
-        std::multiset<int> deserialized = Serializer::template deserialize<std::multiset<int>>(res.get());
-        REQUIRE(original == deserialized);
+        result_holder<std::multiset<int>> deserialized = Serializer::template deserialize<std::multiset<int>>(res.get());
+        REQUIRE(original == *deserialized);
     }
 
     SECTION("std::unordered_set") {
@@ -278,8 +279,8 @@ void builtin_types_test()
             std::println("std::unordered_set -> {}", *res);
         #endif
 
-        std::unordered_set<int> deserialized = Serializer::template deserialize<std::unordered_set<int>>(res.get());
-        REQUIRE(original == deserialized);
+        result_holder<std::unordered_set<int>> deserialized = Serializer::template deserialize<std::unordered_set<int>>(res.get());
+        REQUIRE(original == *deserialized);
     }
 
     SECTION("std::unordered_multiset") {
@@ -290,8 +291,8 @@ void builtin_types_test()
             std::println("std::unordered_multiset -> {}", *res);
         #endif
 
-        std::unordered_multiset<int> deserialized = Serializer::template deserialize<std::unordered_multiset<int>>(res.get());
-        REQUIRE(original == deserialized);
+        result_holder<std::unordered_multiset<int>> deserialized = Serializer::template deserialize<std::unordered_multiset<int>>(res.get());
+        REQUIRE(original == *deserialized);
     }
 }
 

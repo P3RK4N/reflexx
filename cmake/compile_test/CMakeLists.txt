@@ -18,6 +18,7 @@ try_compile(REFLEXX_COMPILE_TEST_RESULT
   CXX_STANDARD 26
   CXX_STANDARD_REQUIRED ON
   CMAKE_FLAGS "-DINCLUDE_DIRECTORIES:STRING=${REFLEXX_INCLUDE_DIRS}"
+  OUTPUT_VARIABLE REFLEXX_COMPILE_TEST_OUTPUT
 )
 
 if(REFLEXX_SHOULD_FAIL)
@@ -26,6 +27,6 @@ if(REFLEXX_SHOULD_FAIL)
   endif()
 else()
   if(NOT REFLEXX_COMPILE_TEST_RESULT)
-    message(FATAL_ERROR "Expected compilation to succeed, but it failed")
+    message(FATAL_ERROR "Expected compilation to succeed, but it failed: ${REFLEXX_COMPILE_TEST_OUTPUT}")
   endif()
 endif()

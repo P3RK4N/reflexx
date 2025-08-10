@@ -21,7 +21,6 @@
 #include "reflexx/type_handler.hpp"
 #include "reflexx/util/std_util.hpp"
 #include "reflexx/provider.hpp"
-#include "reflexx/util/move_construct_if_possible.hpp"
 #include "reflexx/util/enumerate.hpp"
 
 // TODO: Handle noexcept?
@@ -359,7 +358,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
                     this->serialize_object(v);
                 this->end_array();
 
-                map.emplace(util::move_construct_if_possible(k), util::move_construct_if_possible(v));
+                map.emplace(std::move(k), std::move(v));
             }
         }
         else
@@ -393,7 +392,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
                 std::string_view k = this->key();
                 this->serialize_object(v);
 
-                map.emplace(k, util::move_construct_if_possible(v));
+                map.emplace(k, std::move(v));
             }
         }
         else
@@ -422,7 +421,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
             {
                 T value = provider<T>{}();
                 this->serialize_object(value);
-                set.emplace(util::move_construct_if_possible(value));
+                set.emplace(std::move(value));
             }
         }
         else

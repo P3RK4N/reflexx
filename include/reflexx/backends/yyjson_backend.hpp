@@ -3,7 +3,6 @@
 
 #include <cstddef>
 #include <string_view>
-#include <variant>
 #include <vector>
 #include <cstdint>
 #include <cassert>
@@ -81,7 +80,7 @@ public:
     }
 
     template <typename T>
-    requires std::is_arithmetic_v<T>
+    requires util::is_serializable_number_v<T>
     inline void write_number(T val) noexcept
     {
         if constexpr (std::is_floating_point_v<T>)
@@ -126,7 +125,7 @@ public:
 
     inline std::string_view read_key() noexcept
     {
-        auto key = yyjson_obj_iter_next(&std::get<yyjson_obj_iter>(read_stack.back().iter));
+        auto key = yyjson_obj_iter_next(&read_stack.back().iter.obj_iter);
         val_cache = yyjson_obj_iter_get_val(key);
         return { unsafe_yyjson_get_str(key), unsafe_yyjson_get_len(key) };
     }
@@ -135,7 +134,7 @@ public:
     {
         scoped_val_cacher _ { this };
 
-        read_stack.push_back({ val_cache, yyjson_arr_iter_with(val_cache) });
+        read_stack.push_back({ val_cache, { .arr_iter = yyjson_arr_iter_with(val_cache) } });
     }
     
     inline void read_end_array() noexcept
@@ -147,7 +146,7 @@ public:
     {
         scoped_val_cacher _ { this };
 
-        read_stack.push_back({ val_cache, yyjson_obj_iter_with(val_cache) });
+        read_stack.push_back({ val_cache, { .obj_iter = yyjson_obj_iter_with(val_cache) } });
     }
 
     inline void read_end_object() noexcept
@@ -191,7 +190,7 @@ public:
 
     inline bool read_is_null() noexcept
     {
-        val_cache = val_cache ? val_cache : yyjson_arr_iter_next(&std::get<yyjson_arr_iter>(read_stack.back().iter));
+        val_cache = val_cache ? val_cache : yyjson_arr_iter_next(&read_stack.back().iter.arr_iter);
 
         return unsafe_yyjson_is_null(val_cache);
     }
@@ -203,18 +202,23 @@ public:
 
     inline bool read_has_next() noexcept
     {
-        return unsafe_yyjson_is_arr(read_stack.back().val) ? 
-            yyjson_arr_iter_has_next(&std::get<yyjson_arr_iter>(read_stack.back().iter)) :
-            yyjson_obj_iter_has_next(&std::get<yyjson_obj_iter>(read_stack.back().iter));
+        return unsafe_yyjson_is_arr(read_stack.back().val) ?
+            yyjson_arr_iter_has_next(&read_stack.back().iter.arr_iter) :
+            yyjson_obj_iter_has_next(&read_stack.back().iter.obj_iter);
     }
 
 private:
-    using reflexx_yyjson_iter = std::variant<yyjson_arr_iter, yyjson_obj_iter>;
+
+    union reflexx_yyjson_iter
+    {
+        yyjson_arr_iter arr_iter;
+        yyjson_obj_iter obj_iter;
+    };
 
     struct yyjson_read_ctx
     {
         yyjson_val* val;
-        reflexx_yyjson_iter iter { yyjson_arr_iter{} };
+        reflexx_yyjson_iter iter;
     };
 
     /**
@@ -235,7 +239,7 @@ private:
         : _parent(parent)
         {
             // If nullptr, we are in array
-            _parent->val_cache = _parent->val_cache ? _parent->val_cache : yyjson_arr_iter_next(&std::get<yyjson_arr_iter>(_parent->read_stack.back().iter));
+            _parent->val_cache = _parent->val_cache ? _parent->val_cache : yyjson_arr_iter_next(&_parent->read_stack.back().iter.arr_iter);
         }
 
         inline ~scoped_val_cacher() noexcept

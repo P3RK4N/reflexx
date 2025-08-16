@@ -18,7 +18,6 @@
 #include "reflexx/builtin/std_handler.hpp"
 #include "reflexx/provider.hpp"
 #include "reflexx/util/serializable_number.hpp"
-#include "result_holder.hpp"
 
 namespace reflexx
 {
@@ -33,43 +32,162 @@ class serializer final
     template <IsSerializer TSerializer, bool IsReading>
     friend class type_handler;
 
+    // TODO: Test access to this
+    template <bool IsReading>
+    struct serializer_context final
+    {
+        using handler_tuple_type = typename TypeHandlerList::template handler_tuple_t<serializer, IsReading>;
+        using handler_base_type = type_handler<serializer, IsReading>;
+
+        friend serializer;
+        friend handler_base_type;
+
+        serializer_context() requires (!IsReading)
+        : backend_(), handlers_()
+        {
+            init_handlers();
+        }
+
+        serializer_context(std::string_view text) requires IsReading
+        : backend_({ text }), handlers_()
+        {
+            init_handlers();
+        }
+
+        serializer_context(serializer_context&&)                 = default;
+        serializer_context& operator=(serializer_context&&)      = default;
+        serializer_context(const serializer_context&)            = delete;
+        serializer_context& operator=(const serializer_context&) = delete;
+
+        inline constexpr void init_handlers() noexcept
+        {
+            template for (constexpr auto I : util::enumerate<std::tuple_size_v<handler_tuple_type>>())
+            {
+                using handler_t = std::tuple_element_t<I, handler_tuple_type>;
+
+                // TODO: Relax this?
+                static_assert(std::derived_from<handler_t, handler_base_type>, "Handler should derive from type_handler with forwarded template params!");
+                static_assert(std::is_nothrow_default_constructible_v<handler_t>, "Handler should be nothrow default constructible!");
+                static_assert(std::is_nothrow_destructible_v<handler_t>, "Handler should be nothrow destructible!");
+                static_assert(std::is_move_constructible_v<handler_t>, "Handler should be move constructible!");
+                static_assert(std::is_move_assignable_v<handler_t>, "Handler should be move constructible!");
+
+                static_cast<handler_base_type&>(std::get<I>(handlers_)).__ctx__ = this;
+            }
+        }
+
+        BackendType         backend_ {};
+        handler_tuple_type  handlers_ {};
+
+        template <typename T>
+        inline constexpr auto& handler_for() noexcept
+        {
+            return std::get<handler_list_type::template get_first_index_v<serializer, IsReading, T>>(handlers_);
+        }
+    };
+
 /*
     #########################################################################
     ############################# Interface #################################    
     #########################################################################
 */
 public:
+    static constexpr serializer_settings    settings            = SerializerSettings;
+    static constexpr bool                   Read                = true;
+    static constexpr bool                   Write               = false;
+    
+    using                                   handler_list_type   = TypeHandlerList;
+    using                                   backend_type        = BackendType;
+    using                                   read_context        = serializer_context<Read>;
+    using                                   write_context       = serializer_context<Write>;
+    using                                   result_context      = std::variant<read_context, write_context>;
+
+
+    friend result_context;
+
+    // TODO: Test access
+    // TODO: Merge with context, there is no need for 2 internal structs, or is there?
     template <typename T>
-    static inline constexpr result_holder<std::string_view> serialize(const T& obj)
+    class result
     {
-        auto holder = make_result_holder<std::string_view, write_context>();
-        auto& ctx = *static_cast<write_context*>(holder.ctx_);
-        serialize(obj, ctx);
-        holder.res_ = ctx.backend_.get();
-        return holder;
+        friend serializer;
+
+    public:
+        inline constexpr T& get() noexcept
+        {
+            return res_;
+        }
+
+        inline constexpr const T& get() const noexcept
+        {
+            return res_;
+        }
+
+        inline constexpr T& operator*() noexcept
+        {
+            return res_;
+        }
+
+        inline constexpr const T& operator*() const noexcept
+        {
+            return res_;
+        }
+        
+    private:
+        // In-place read
+        result(T res, std::string_view input) requires std::is_reference_v<T>
+        : res_(res), ctx_(std::in_place_type<read_context>, input) {}
+        
+        // Return val read
+        result(std::string_view input)
+        : res_(provider<T>{}()), ctx_(std::in_place_type<read_context>, input) {}
+
+        // Return val write
+        result()
+        : res_(), ctx_(std::in_place_type<write_context>) {}
+
+        template <bool IsReading>
+        auto& context()
+        {
+            if constexpr (IsReading)
+            {
+                return std::get<read_context>(ctx_);
+            }
+            else
+            {
+                return std::get<write_context>(ctx_);
+            }
+        }
+
+        T res_;
+        result_context ctx_;
     };
 
     template <typename T>
-    static inline constexpr result_holder<void> deserialize(T& obj, std::string_view text)
+    static inline constexpr result<std::string_view> serialize(const T& obj)
     {
-        auto holder = make_result_holder<void, read_context>(text);
-        auto& ctx = *static_cast<read_context*>(holder.ctx_);
-        deserialize(obj, ctx);
-        return holder;
+        auto res = result<std::string_view>{};
+        auto& ctx = res.template context<Write>();
+        serialize(obj, ctx);
+        *res = ctx.backend_.get();
+        return res;
+    };
+
+    template <typename T>
+    static inline constexpr result<T&> deserialize(T& obj, std::string_view text)
+    {
+        auto res = result<T&>(obj, text);
+        deserialize(*res, res.template context<Read>());
+        return res;
     }
 
     template <typename T>
-    static inline constexpr result_holder<T> deserialize(std::string_view text)
+    static inline constexpr result<T> deserialize(std::string_view text)
     {
-        auto holder = make_result_holder<T, read_context>(text);
-        auto& ctx = *static_cast<read_context*>(holder.ctx_);
-        deserialize(holder.res_, ctx);
-        return holder;
+        auto res = result<T>(text);
+        deserialize(*res, res.template context<Read>());
+        return res;
     }
-
-    static constexpr serializer_settings settings   = SerializerSettings;
-    using handler_list_type                         = TypeHandlerList;
-    using backend_type                              = BackendType;
 
 /*
     #########################################################################
@@ -107,70 +225,6 @@ private:
     serializer(serializer&&)                    = delete;
     serializer& operator=(const serializer&)    = delete;
     serializer& operator=(serializer&&)         = delete;
-
-    template <bool IsReading>
-    struct serializer_context final
-    {
-        using base_type = type_handler<serializer, IsReading>;
-        using handler_tuple_t = typename TypeHandlerList::template handler_tuple_t<serializer, IsReading>;
-
-        serializer_context() requires (!IsReading)
-        : backend_(), handlers_()
-        {
-            init_handlers();
-        }
-
-        serializer_context(std::string_view text) requires IsReading
-        : backend_({ text }), handlers_()
-        {
-            init_handlers();
-        }
-        
-        serializer_context(const serializer_context&)            = delete;
-        serializer_context(serializer_context&&)                 = delete;
-        serializer_context& operator=(const serializer_context&) = delete;
-        serializer_context& operator=(serializer_context&&)      = delete;
-
-        inline constexpr void init_handlers() noexcept
-        {
-            template for (constexpr auto I : util::enumerate<std::tuple_size_v<handler_tuple_t>>())
-            {
-                using handler_t = std::tuple_element_t<I, handler_tuple_t>;
-    
-                static_assert(std::derived_from<handler_t, base_type>, "Handler should derive from type_handler with forwarded template params!");
-                // TODO: Relax this?
-                static_assert(std::is_nothrow_default_constructible_v<handler_t>, "Handler should be nothrow default constructible!");
-                static_assert(std::is_nothrow_destructible_v<handler_t>, "Handler should be nothrow destructible!");
-
-                static_cast<base_type&>(std::get<I>(handlers_)).__ctx__ = this;
-            }
-        }
-
-        BackendType backend_ {};
-        handler_tuple_t handlers_ {};
-
-        template <typename T>
-        inline constexpr auto& handler_for() noexcept
-        {
-            return std::get<TypeHandlerList::template get_first_index_v<serializer, IsReading, T>>(handlers_);
-        }
-    };
-
-    using read_context = serializer_context<true>;
-    using write_context = serializer_context<false>;
-
-    template <typename TRes, typename TCtx, typename... TArgs>
-    static inline constexpr result_holder<TRes> make_result_holder(TArgs&&... args)
-    {
-        if constexpr (std::is_same_v<TRes, void>)
-        {
-            return result_holder<void>{ new TCtx { std::forward<TArgs>(args)... } };
-        }
-        else
-        {
-            return result_holder<TRes>{ provider<TRes>{}(), new TCtx { std::forward<TArgs>(args)... } };
-        }
-    } 
 
 /*
     #########################################################################

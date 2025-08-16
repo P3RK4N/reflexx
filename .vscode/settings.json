@@ -6,11 +6,11 @@
     ],
     "C_Cpp.intelliSenseEngine": "disabled",
     "clangd.path": "${workspaceFolder}/bin/clang-p2996/install/bin/clangd",
-    "clangd.arguments": 
-    [
-        "--compile-commands-dir=${workspaceFolder}/bin",
-        "--log=verbose", 
-        "-pretty", 
-        "--background-index=false",
-    ]
+    // "clangd.arguments": 
+    // [
+    //     "--compile-commands-dir=${workspaceFolder}/bin",
+    //     "--log=verbose", 
+    //     "-pretty", 
+    //     "--background-index=false",
+    // ]
 }

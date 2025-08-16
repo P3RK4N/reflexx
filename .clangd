@@ -1,6 +1,11 @@
 CompileFlags:
-  CompilationDatabase: bin/compile_commands.json
+  # CompilationDatabase: bin/compile_commands.json
+  # Index:
+  #   Background: true
+  #   MemoryLimit: 2048 # MB
   Add: 
+    - -j=2
+    - -malloc-trim
     - -std=c++26
     - -nostdinc++
     - -freflection-latest

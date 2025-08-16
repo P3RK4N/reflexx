@@ -36,6 +36,11 @@ struct std_handler : type_handler<TSerializer, IsReading>
         this->serialize_string(v);        
     }
 
+    inline constexpr void serialize(std::string_view& sv) const
+    {
+        this->serialize_string(sv);
+    }
+
     template <typename T1, typename T2>
     inline constexpr void serialize(std::pair<T1, T2>& pair) const
     noexcept(

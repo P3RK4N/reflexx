@@ -102,7 +102,7 @@ protected:
         __ctx__->backend_.read_bool(v);
     }
 
-    constexpr inline void serialize_bool(bool v) const
+    constexpr inline void serialize_bool(const bool v) const
     noexcept(noexcept(__ctx__->backend_.write_bool(v))) requires IsWriting
     {
         __ctx__->backend_.write_bool(v);
@@ -114,10 +114,22 @@ protected:
         v = __ctx__->backend_.read_string();
     }
 
-    constexpr inline void serialize_string(std::string_view v) const
+    constexpr inline void serialize_string(const std::string& v) const
     noexcept(noexcept(__ctx__->backend_.write_string(v))) requires IsWriting
     {
         __ctx__->backend_.write_string(v);
+    }
+
+    constexpr inline void serialize_string(std::string_view& sv) const
+    noexcept(noexcept(sv = __ctx__->backend_.read_string())) requires IsReading
+    { 
+        sv = __ctx__->backend_.read_string();
+    }
+
+    constexpr inline void serialize_string(const std::string_view& sv) const
+    noexcept(noexcept(__ctx__->backend_.write_string(sv))) requires IsWriting
+    {
+        __ctx__->backend_.write_string(sv);
     }
 
     template <util::SerializableNumber T>
@@ -128,7 +140,7 @@ protected:
     }
 
     template <util::SerializableNumber T>
-    constexpr inline void serialize_number(T value) const 
+    constexpr inline void serialize_number(const T value) const 
     noexcept(noexcept(__ctx__->backend_.write_number(value))) requires IsWriting
     {
         __ctx__->backend_.write_number(value);

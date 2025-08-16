@@ -10,6 +10,8 @@
 
 #include <yyjson.h>
 
+#include "reflexx/util/serializable_number.hpp"
+
 namespace reflexx {
 namespace backends {
 
@@ -81,7 +83,7 @@ public:
 
     template <typename T>
     requires util::is_serializable_number_v<T>
-    inline void write_number(T val) noexcept
+    inline void write_number(const T val) noexcept
     {
         if constexpr (std::is_floating_point_v<T>)
         {
@@ -97,7 +99,7 @@ public:
         }
     }
 
-    inline void write_bool(bool b) noexcept
+    inline void write_bool(const bool b) noexcept
     {
         append_value(yyjson_mut_bool(write_doc, b));
     }

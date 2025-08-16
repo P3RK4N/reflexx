@@ -37,6 +37,18 @@ void builtin_types_test()
         REQUIRE(original == *deserialized);
     }
 
+    SECTION("std::string_view") {
+        std::string original = "hello";
+        auto res = Serializer::serialize(original);
+        
+        #ifdef REFLEXX_DEBUG_TEST_PRINT
+            std::println("std::string -> {}", *res);
+        #endif
+
+        result_holder<std::string_view> deserialized = Serializer::template deserialize<std::string_view>(res.get());
+        REQUIRE(original == *deserialized);
+    }
+
     SECTION("std::pair") {
         std::pair<int, std::string> original = {42, "world"};
         auto res = Serializer::serialize(original);

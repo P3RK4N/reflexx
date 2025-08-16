@@ -1,0 +1,12 @@
+CompileFlags:
+  CompilationDatabase: bin/compile_commands.json
+  Add: 
+    - -std=c++26
+    - -nostdinc++
+    - -freflection-latest
+    - -fexceptions
+    - -frtti
+    - --gcc-toolchain=/home/p3rk4n/reflexx2/bin/clang-p2996/install
+    - -isystem/home/p3rk4n/reflexx2/bin/clang-p2996/install/include/c++/v1
+    - -isystem/home/p3rk4n/reflexx2/bin/clang-p2996/install/include/x86_64-unknown-linux-gnu/c++/v1
+    - -I/home/p3rk4n/reflexx2/include

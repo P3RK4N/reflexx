@@ -9,12 +9,11 @@
 
 namespace reflexx {
 
-// Greedy pointer usage
-// Assumes exclusivity between unique and shared pointer
-// Assumes unique pointers wont end up in cycle
+// Greedy pointer usage... reuse if allocated
+// Supports shared and weak ptrs
 
 template <typename TSerializer, bool IsReading>
-struct [[deprecated("ptr_graph_handler is deprecated! Consider not serializing objects with cycles since they can cause memory leaks!")]] ptr_graph_handler : type_handler<TSerializer, IsReading>
+struct ptr_graph_handler : type_handler<TSerializer, IsReading>
 {
     std::map<std::uint64_t, std::shared_ptr<void>> handled_objs {};
 
@@ -47,9 +46,21 @@ struct [[deprecated("ptr_graph_handler is deprecated! Consider not serializing o
     }
 
     template <typename T>
+    inline constexpr void serialize(std::weak_ptr<T>& ptr)
+    {
+        auto shared = ptr.lock();
+        serialize(shared);
+        if constexpr (IsReading)
+        {
+            ptr = shared;
+        }
+    }
+
+private:
+    template <typename T>
     inline constexpr void serialize_ptr_graph(std::shared_ptr<T>& ptr)
     {
-        std::uint64_t ptr_val = reinterpret_cast<std::uint64_t>(ptr.get());
+        std::uint64_t ptr_val = static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(ptr.get()));
 
         this->begin_object();
 

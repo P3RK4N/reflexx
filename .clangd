@@ -1,17 +1,12 @@
 CompileFlags:
-  # CompilationDatabase: bin/compile_commands.json
-  # Index:
-  #   Background: true
-  #   MemoryLimit: 2048 # MB
-  Add: 
-    - -j=2
-    - -malloc-trim
+  Add:
     - -std=c++26
     - -nostdinc++
     - -freflection-latest
     - -fexceptions
     - -frtti
-    - --gcc-toolchain=/home/p3rk4n/reflexx2/bin/clang-p2996/install
-    - -isystem/home/p3rk4n/reflexx2/bin/clang-p2996/install/include/c++/v1
-    - -isystem/home/p3rk4n/reflexx2/bin/clang-p2996/install/include/x86_64-unknown-linux-gnu/c++/v1
-    - -I/home/p3rk4n/reflexx2/include
+    - --gcc-toolchain=bin/clang-p2996/install
+    - -isystembin/clang-p2996/install/include/c++/v1
+    - -isystembin/clang-p2996/install/include/x86_64-unknown-linux-gnu/c++/v1
+    - -Iinclude
+    - -Ibin/_deps/catch2-src/src

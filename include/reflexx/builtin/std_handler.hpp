@@ -58,6 +58,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
         this->end_array();
     }
 
+    // Greedy optional usage
     template <typename T>
     inline constexpr void serialize(std::optional<T>& opt) const
     {
@@ -83,6 +84,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
         }
     }
 
+    // Greedy pointer usage
     template <typename T>
     inline constexpr void serialize(std::shared_ptr<T>& ptr) const
     {
@@ -108,6 +110,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
         }
     }
 
+    // Greedy pointer usage
     template <typename T>
     inline constexpr void serialize(std::unique_ptr<T>& ptr) const
     {

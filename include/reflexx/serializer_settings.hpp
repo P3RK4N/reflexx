@@ -3,10 +3,8 @@
 
 #include <cassert>
 #include <experimental/meta>
-#include <type_traits>
 
 #include "reflexx/policies.hpp"
-#include "reflexx/util/non_serializable_category_type.hpp"
 
 namespace reflexx
 {
@@ -76,19 +74,6 @@ template <serializer_settings Settings>
 static constexpr bool ignore_non_serializable_members_v =
     Settings.ignore_non_serializable_members_;
 
-/*
-    If we are not ignoring anything, we should definitively try to handle member.
-    Otherwise, if we ignore non serializable members, we will handle only
-    those that are not const and not non-serializable members.
-*/
-template <serializer_settings Settings, std::meta::info MemberInfo>
-requires (std::meta::is_nonstatic_data_member(MemberInfo))
-static constexpr bool should_handle_member_v =
-    !ignore_non_serializable_members_v<Settings> ||
-    (
-        !util::is_non_serializable_category_type_v<typename[: std::meta::type_of(MemberInfo) :]> &&
-        !std::is_const_v<typename[: std::meta::type_of(MemberInfo) :]>
-    );
 
 
 } // reflexx

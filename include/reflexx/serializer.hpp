@@ -238,7 +238,7 @@ private:
     noexcept(noexcept(ctx.template handler_for<std::remove_cvref_t<T>>().serialize(const_cast<T&>(obj))))
     {
         // NOTE: We need to cast constness away due to symmetric read/write api.
-        //  Method signature promises constness and that is what user will get at the end. (I promise)
+        //  Method signature promises constness and that is what reflexx will ensure.
         ctx.template handler_for<std::remove_cvref_t<T>>().serialize(const_cast<T&>(obj));
     }
 

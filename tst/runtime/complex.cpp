@@ -8,6 +8,7 @@
 #include "reflexx/serializer_settings.hpp"
 #include "reflexx/serializer.hpp"
 #include "reflexx/backends/yyjson_backend.hpp"
+#include "reflexx/backends/ryml_backend.hpp"
 
 template <typename... Ts>
 void pprint(const Ts&... items)
@@ -20,6 +21,7 @@ constexpr auto settings = reflexx::serializer_settings::Strict();
 
 // Runtime only
 using s = reflexx::serializer<settings, reflexx::backends::yyjson_backend>;
+using syaml = reflexx::serializer<settings, reflexx::backends::ryml_backend>;
 
 enum class Role { Admin, Guest, User };
 
@@ -76,11 +78,15 @@ TEST_CASE( "Complex", "[MISC]" )
     p1.level = 69;
 
     Player p2;
-
     auto data = s::serialize(p1);
     s::deserialize(p2, data.get());
+    
+    Player p3;
+    pprint(*syaml::serialize(p1));
+    syaml::deserialize(p3, *syaml::serialize(p1));
 
     REQUIRE( p1 == p2 );
+    REQUIRE( p1 == p3 );
 }
 
 

@@ -7,13 +7,13 @@
 
 #include "reflexx/util/serializable_number.hpp"
 
-namespace reflexx {
-namespace backends {
+namespace reflexx::backends {
 
 // Empty constexpr interface
 struct placeholder_backend
 {
     inline constexpr explicit placeholder_backend()                         {               }
+    inline constexpr explicit placeholder_backend(std::span<char>)          {               }
     inline constexpr explicit placeholder_backend(std::span<const char>)    {               }
     inline constexpr ~placeholder_backend()                                 {               }
 
@@ -47,7 +47,6 @@ struct placeholder_backend
     inline constexpr bool              read_has_next()                      { return false; }
 };
 
-} // backends
-} // reflexx
+} // reflexx::backends
 
 #endif

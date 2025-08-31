@@ -24,6 +24,7 @@
 #include "reflexx/util/enumerate.hpp"
 
 // TODO: Handle noexcept?
+// TODO: Keep everything constexpr?
 
 namespace reflexx {
 
@@ -345,7 +346,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
     }
 
     template <typename TMap>
-    requires (!std::is_same_v<typename TMap::key_type, std::string>)
+    requires (!std::is_same_v<typename TMap::key_type, std::string> && !std::is_same_v<typename TMap::key_type, std::string_view>)
     inline constexpr void serialize_map(TMap& map) const
     {
         using K = typename TMap::key_type;
@@ -381,7 +382,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
     }
 
     template <typename TMap>
-    requires std::is_same_v<typename TMap::key_type, std::string>
+    requires std::is_same_v<typename TMap::key_type, std::string> || std::is_same_v<typename TMap::key_type, std::string_view>
     inline constexpr void serialize_map(TMap& map) const
     {
         using K = typename TMap::key_type;

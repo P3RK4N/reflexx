@@ -39,7 +39,12 @@ endif()
 
 if (PROJECT_IS_TOP_LEVEL)
     set(REFLEXX_ENABLE_JSON ON)
+    set(REFLEXX_ENABLE_YAML ON)
 endif()
+
+############################################################
+######################## BACKENDS ##########################
+############################################################
 
 set(REFLEXX_BACKEND_SOURCES "")
 set(REFLEXX_BACKEND_LIBS "")
@@ -56,8 +61,24 @@ if (REFLEXX_ENABLE_JSON OR TARGET yyjson)
     list(APPEND REFLEXX_BACKEND_SOURCES "${CMAKE_CURRENT_LIST_DIR}/include/reflexx/backends/yyjson_backend.hpp")
 endif()
 
-add_library(reflexx INTERFACE "${REFLEXX_BACKEND_SOURCES}")
-target_link_libraries(reflexx INTERFACE "${REFLEXX_BACKEND_LIBS}")
+if (REFLEXX_ENABLE_YAML OR TARGET ryml)
+    if (NOT TARGET ryml)
+        CPMAddPackage(
+            NAME rapidyaml
+            GITHUB_REPOSITORY biojppm/rapidyaml
+            GIT_TAG v0.9.0
+        )
+    endif()
+    list(APPEND REFLEXX_BACKEND_LIBS ryml c4core)
+    list(APPEND REFLEXX_BACKEND_SOURCES "${CMAKE_CURRENT_LIST_DIR}/include/reflexx/backends/ryml_backend.hpp")
+endif()
+
+############################################################
+######################### REFLEXX ##########################
+############################################################
+
+add_library(reflexx INTERFACE)
+target_link_libraries(reflexx INTERFACE ${REFLEXX_BACKEND_LIBS})
 target_include_directories(reflexx INTERFACE "${CMAKE_CURRENT_LIST_DIR}/include")
 set_target_properties(
     reflexx 

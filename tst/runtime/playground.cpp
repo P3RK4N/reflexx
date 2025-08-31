@@ -8,6 +8,7 @@
 #include "reflexx/serializer_settings.hpp"
 #include "reflexx/serializer.hpp"
 #include "reflexx/backends/yyjson_backend.hpp"
+#include "reflexx/backends/ryml_backend.hpp"
 
 template <typename... Ts>
 void pyprint(const Ts&... items)
@@ -18,7 +19,9 @@ void pyprint(const Ts&... items)
 
 constexpr auto settings = reflexx::serializer_settings::Strict();
 using s = reflexx::serializer<settings, reflexx::backends::yyjson_backend>;
+using syaml = reflexx::serializer<settings, reflexx::backends::ryml_backend>;
 
+#include <iostream>
 
 TEST_CASE( "Playground", "[MISC]" )
 {
@@ -68,5 +71,9 @@ TEST_CASE( "Playground", "[MISC]" )
         {"a", 1}, {"b", 2}, {"c", 3}
     };
 
+
     pyprint(*s::serialize(original));
+    pyprint(*syaml::serialize(original));
+    pyprint("Ante");
+
 }

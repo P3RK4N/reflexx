@@ -5,8 +5,10 @@ CompileFlags:
     - -freflection-latest
     - -fexceptions
     - -frtti
-    - --gcc-toolchain=bin/clang-p2996/install
-    - -isystembin/clang-p2996/install/include/c++/v1
-    - -isystembin/clang-p2996/install/include/x86_64-unknown-linux-gnu/c++/v1
-    - -Iinclude
-    - -Ibin/_deps/catch2-src/src
+    - --gcc-toolchain=clang-p2996/install
+    - -isystemclang-p2996/install/include/c++/v1
+    - -isystemclang-p2996/install/include/x86_64-unknown-linux-gnu/c++/v1
+    - -I../include
+    - -I_deps/catch2-src/src
+    - -I_deps/rapidyaml-src/src
+    - -I_deps/rapidyaml-src/ext/c4core/src

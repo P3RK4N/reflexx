@@ -30,8 +30,8 @@ jobs:
               -B "${{ github.workspace }}/bin" \
               -S "${{ github.workspace }}"
 
-    - name: Build reflexx target (Debug)
-      run: cmake --build "${{ github.workspace }}/bin" --config Debug --target reflexx
+    # - name: Build reflexx target (Debug)
+    #   run: cmake --build "${{ github.workspace }}/bin" --config Debug --target reflexx
 
     - name: Build reflexx_runtime_tests target (Debug)
       run: cmake --build "${{ github.workspace }}/bin" --config Debug --target reflexx_runtime_tests

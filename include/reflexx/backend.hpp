@@ -22,6 +22,7 @@ concept IsBackendType =
         
         // For read input
         std::span<const char> input,
+        std::span<char> mutable_input,
 
         // Strings
         std::string str,
@@ -40,8 +41,10 @@ concept IsBackendType =
         float& f_ref, double& d_ref
     )
     {
-        T {};           /* Constructor for write mode */
-        T { input };    /* Constructor for read mode  */
+        T {};                   /* Constructor for write mode           */
+
+        T { input };            /* Constructor for copy read mode       */
+        T { mutable_input };    /* Constructor for inplace read mode    */
 
         /**
          *  #################################################################

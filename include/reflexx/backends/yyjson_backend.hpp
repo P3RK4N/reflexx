@@ -12,26 +12,26 @@
 
 #include "reflexx/util/serializable_number.hpp"
 
-namespace reflexx {
-namespace backends {
+namespace reflexx::backends {
 
 struct yyjson_backend
 {
 public:
     inline explicit yyjson_backend()
+    : write_doc(yyjson_mut_doc_new(nullptr))
     {
-        write_doc = yyjson_mut_doc_new(nullptr);
-        write_stack.reserve(8);
+        write_stack.reserve(InitialVectorSize);
     }
     
+    inline explicit yyjson_backend(std::span<char> mutable_input)
+    : yyjson_backend(static_cast<std::span<const char>>(mutable_input)) {}
+
     inline explicit yyjson_backend(std::span<const char> input)
+    : read_doc(yyjson_read(input.data(), input.size_bytes(), YYJSON_READ_ALLOW_COMMENTS)), val_cache(yyjson_doc_get_root(read_doc))
     {
-        read_doc = yyjson_read(input.data(), input.size_bytes(), YYJSON_READ_ALLOW_COMMENTS);
-        read_stack.reserve(8);
-
-        val_cache = yyjson_doc_get_root(read_doc);
+        read_stack.reserve(InitialVectorSize);
     }
-
+    
     inline ~yyjson_backend() noexcept
     {
         if (write_doc)      yyjson_mut_doc_free(write_doc);
@@ -210,7 +210,6 @@ public:
     }
 
 private:
-
     union reflexx_yyjson_iter
     {
         yyjson_arr_iter arr_iter;
@@ -250,6 +249,8 @@ private:
         }
     };
 
+    static constexpr size_t InitialVectorSize = 8;
+
     yyjson_mut_doc* write_doc = nullptr;
     yyjson_doc* read_doc = nullptr;
     const char* write_result = nullptr;
@@ -282,7 +283,6 @@ private:
     }
 };
 
-} // backends
-} // reflexx
+} // reflexx::backends
 
 #endif

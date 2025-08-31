@@ -14,10 +14,11 @@
 #include <catch2/catch_all.hpp>
 
 #include "reflexx/backend.hpp"
+#include "reflexx/backends/ryml_backend.hpp"
 #include "reflexx/serializer.hpp"
 #include "reflexx/backends/yyjson_backend.hpp"
 
-// #define REFLEXX_DEBUG_TEST_PRINT
+#define REFLEXX_DEBUG_TEST_PRINT
 using namespace reflexx;
 
 template <reflexx::IsBackendType TBackend>
@@ -37,12 +38,24 @@ void builtin_types_test()
         REQUIRE(original == *deserialized);
     }
 
+    SECTION("std::string (empty)") {
+        std::string original = "";
+        auto res = serializer::serialize(original);
+
+        #ifdef REFLEXX_DEBUG_TEST_PRINT
+            std::println("std::string (empty) -> {}", *res);
+        #endif
+
+        typename serializer::template result<std::string> deserialized = serializer::template deserialize<std::string>(res.get());
+        REQUIRE(original == *deserialized);
+    }
+
     SECTION("std::string_view") {
         std::string original = "hello";
         auto res = serializer::serialize(original);
         
         #ifdef REFLEXX_DEBUG_TEST_PRINT
-            std::println("std::string -> {}", *res);
+            std::println("std::string_view -> {}", *res);
         #endif
 
         typename serializer::template result<std::string_view> deserialized = serializer::template deserialize<std::string_view>(res.get());
@@ -211,15 +224,39 @@ void builtin_types_test()
         REQUIRE(valarray_equal(original, *deserialized));
     }
 
-    SECTION("std::map") {
+    SECTION("std::map (string)") {
         std::map<std::string, int> original = {{"a", 1}, {"b", 2}};
         auto res = serializer::serialize(original);
 
         #ifdef REFLEXX_DEBUG_TEST_PRINT
-            std::println("std::map -> {}", *res);
+            std::println("std::map (string) -> {}", *res);
         #endif
 
         typename serializer::template result<std::map<std::string, int>> deserialized = serializer::template deserialize<std::map<std::string, int>>(res.get());
+        REQUIRE(original == *deserialized);
+    }
+
+    SECTION("std::map (string_view)") {
+        std::map<std::string_view, int> original = {{"a", 1}, {"b", 2}};
+        auto res = serializer::serialize(original);
+
+        #ifdef REFLEXX_DEBUG_TEST_PRINT
+            std::println("std::map (string_view) -> {}", *res);
+        #endif
+
+        typename serializer::template result<std::map<std::string_view, int>> deserialized = serializer::template deserialize<std::map<std::string_view, int>>(res.get());
+        REQUIRE(original == *deserialized);
+    }
+
+    SECTION("std::map (int)") {
+        std::map<int, int> original = {{1, 1}, {2, 2}};
+        auto res = serializer::serialize(original);
+
+        #ifdef REFLEXX_DEBUG_TEST_PRINT
+            std::println("std::map (int) -> {}", *res);
+        #endif
+
+        typename serializer::template result<std::map<int, int>> deserialized = serializer::template deserialize<std::map<int, int>>(res.get());
         REQUIRE(original == *deserialized);
     }
 
@@ -312,3 +349,28 @@ TEST_CASE("Builtin types using yyjson_backend")
 {
     builtin_types_test<reflexx::backends::yyjson_backend>();
 }
+
+TEST_CASE("Builtin types using ryml_backend")
+{
+    builtin_types_test<reflexx::backends::ryml_backend>();
+}
+
+
+// TODO: Make these tests better
+//  - Currently it only checks for root leaf value behaviour
+//  - Expand to see behaviour inside array and object
+//  - expand to see how everything behaves when empty or null
+//  - expand to see how everything behaves as optional or ptr
+
+
+/**
+def testing shit here:
+    for (as value, as optional value, as shared_ptr, as unique_ptr)
+        for (as leaf root, as array element, as object field)
+            for (type: types)
+                SECTION(...)
+
+For contaners, call it multiple times: empty, 1 and few (associative with string and non string)
+For nullable, nullptrable: non null and null
+
+ */

@@ -7,8 +7,8 @@
 #include "catch2/catch_test_macros.hpp"
 #include "reflexx/serializer_settings.hpp"
 #include "reflexx/serializer.hpp"
-#include "reflexx/backends/yyjson_backend.hpp"
-#include "reflexx/backends/ryml_backend.hpp"
+#include "reflexx/builtin/backends/yyjson_backend.hpp"
+#include "reflexx/builtin/backends/ryml_backend.hpp"
 
 template <typename... Ts>
 void pprint(const Ts&... items)

@@ -1,10 +1,10 @@
 #include <catch2/catch_all.hpp>
 
-#include <reflexx/builtin/ptr_graph_handler.hpp>
+#include <reflexx/builtin/handlers/ptr_graph_handler.hpp>
 
 #include <reflexx/backend.hpp>
 #include <reflexx/serializer.hpp>
-#include <reflexx/backends/yyjson_backend.hpp>
+#include <reflexx/builtin/backends/yyjson_backend.hpp>
 
 using handler_list_t = reflexx::type_handler_list<reflexx::ptr_graph_handler, reflexx::std_handler, reflexx::default_handler>;
 using serializer = reflexx::serializer<reflexx::serializer_settings::Strict(), reflexx::backends::yyjson_backend, handler_list_t>;

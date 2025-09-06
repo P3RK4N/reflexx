@@ -14,8 +14,8 @@
 #include "reflexx/serializer_settings.hpp"
 #include "reflexx/util/non_serializable_category_type.hpp"
 #include "reflexx/util/enum_conv.hpp"
-#include "reflexx/builtin/default_handler.hpp"
-#include "reflexx/builtin/std_handler.hpp"
+#include "reflexx/builtin/handlers/default_handler.hpp"
+#include "reflexx/builtin/handlers/std_handler.hpp"
 #include "reflexx/provider.hpp"
 #include "reflexx/util/serializable_number.hpp"
 
@@ -95,7 +95,7 @@ class serializer final
 public:
     static constexpr serializer_settings    settings            = SerializerSettings;
     static constexpr bool                   Read                = true;
-    static constexpr bool                   Write               = false;
+    static constexpr bool                   Write               = !Read;
     
     using                                   handler_list_type   = TypeHandlerList;
     using                                   backend_type        = BackendType;
@@ -240,6 +240,7 @@ private:
     {
         // NOTE: We need to cast constness away due to symmetric read/write api.
         //  Method signature promises constness and that is what reflexx will ensure.
+        // TODO: Prevent handlers from modifying during Write mode
         ctx.template handler_for<std::remove_cvref_t<T>>().serialize(const_cast<T&>(obj));
     }
 

@@ -29,10 +29,6 @@ project(reflexx_project CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-if (NOT COMMAND FetchContent_Declare)
-    include(FetchContent)
-endif()
-
 if (NOT COMMAND CPMAddPackage)
     include(get_cpm)
 endif()
@@ -90,4 +86,5 @@ set_target_properties(
 
 if (PROJECT_IS_TOP_LEVEL)
     add_subdirectory(tst)
+    add_subdirectory(benchmark)
 endif()

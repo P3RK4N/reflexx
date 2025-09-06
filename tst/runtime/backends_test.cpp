@@ -14,9 +14,9 @@
 #include <catch2/catch_all.hpp>
 
 #include "reflexx/backend.hpp"
-#include "reflexx/backends/ryml_backend.hpp"
+#include "reflexx/builtin/backends/ryml_backend.hpp"
+#include "reflexx/builtin/backends/yyjson_backend.hpp"
 #include "reflexx/serializer.hpp"
-#include "reflexx/backends/yyjson_backend.hpp"
 
 #define REFLEXX_DEBUG_TEST_PRINT
 using namespace reflexx;

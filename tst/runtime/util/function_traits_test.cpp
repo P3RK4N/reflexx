@@ -157,7 +157,7 @@ TEST_CASE("function_traits equality")
 {
     using traits_plain        = function_traits<void(int&, double)>;
     using traits_arg_volatile = function_traits<void(volatile int&, double)>;
-    using traits_arg_cv       = function_traits<void(const int, volatile double)>;
+    using traits_arg_cv       = function_traits<void(const int, volatile double&)>;
     using traits_same         = function_traits<void(int&, double)>;
 
     STATIC_REQUIRE(are_function_traits_same_v<traits_plain, traits_same>);

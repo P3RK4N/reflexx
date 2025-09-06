@@ -10,6 +10,12 @@ enum class enum_format_policy
     integral
 };
 
+enum class handler_matching_policy
+{
+    exact,
+    callable
+};
+
 } // policies
 } // reflexx
 

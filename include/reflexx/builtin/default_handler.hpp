@@ -59,7 +59,7 @@ struct default_handler : type_handler<TSerializer, IsReading>
         {
             using TMember = [: std::meta::type_of(member_info) :];
 
-            if constexpr (should_handle_member_v<TSerializer::settings, member_info>)
+            if constexpr (util::should_handle_member_v<TSerializer::settings, member_info>)
             {
                 assert_member_type<member_info>();
                 

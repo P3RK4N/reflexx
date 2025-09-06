@@ -69,7 +69,7 @@ if (REFLEXX_ENABLE_YAML OR TARGET ryml)
             GIT_TAG v0.9.0
         )
     endif()
-    list(APPEND REFLEXX_BACKEND_LIBS ryml c4core)
+    list(APPEND REFLEXX_BACKEND_LIBS ryml)
     list(APPEND REFLEXX_BACKEND_SOURCES "${CMAKE_CURRENT_LIST_DIR}/include/reflexx/backends/ryml_backend.hpp")
 endif()
 

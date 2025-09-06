@@ -4,16 +4,63 @@
 #include <cassert>
 #include <experimental/meta>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 #include "declare.hpp"
 
 namespace reflexx {
+namespace detail {
 
+template <typename Handler, typename T, typename Sig, typename = void>
+struct has_handle_sig : std::false_type {};
+
+template <typename Handler, typename T, typename Sig>
+struct has_handle_sig<Handler, T, Sig, std::void_t<decltype(static_cast<Sig>(&Handler::serialize))>> : std::true_type {};
+
+template <typename Handler, typename T>
+struct has_exact_handle_for : std::disjunction
+<
+    has_handle_sig<Handler, T, void (Handler::*)(T&)                           >,
+    has_handle_sig<Handler, T, void (Handler::*)(T&)                   noexcept>,
+    has_handle_sig<Handler, T, void (Handler::*)(T&)                 &         >,
+    has_handle_sig<Handler, T, void (Handler::*)(T&)                 & noexcept>,
+    has_handle_sig<Handler, T, void (Handler::*)(T&)                &&         >,
+    has_handle_sig<Handler, T, void (Handler::*)(T&)                && noexcept>,
+    has_handle_sig<Handler, T, void (Handler::*)(T&) const                     >,
+    has_handle_sig<Handler, T, void (Handler::*)(T&) const             noexcept>,
+    has_handle_sig<Handler, T, void (Handler::*)(T&) const           &         >,
+    has_handle_sig<Handler, T, void (Handler::*)(T&) const           & noexcept>,
+    has_handle_sig<Handler, T, void (Handler::*)(T&) const          &&         >,
+    has_handle_sig<Handler, T, void (Handler::*)(T&) const          && noexcept>,
+    has_handle_sig<Handler, T, void (Handler::*)(T&)       volatile            >,
+    has_handle_sig<Handler, T, void (Handler::*)(T&)       volatile    noexcept>,
+    has_handle_sig<Handler, T, void (Handler::*)(T&)       volatile  &         >,
+    has_handle_sig<Handler, T, void (Handler::*)(T&)       volatile  & noexcept>,
+    has_handle_sig<Handler, T, void (Handler::*)(T&)       volatile &&         >,
+    has_handle_sig<Handler, T, void (Handler::*)(T&)       volatile && noexcept>,
+    has_handle_sig<Handler, T, void (Handler::*)(T&) const volatile            >,
+    has_handle_sig<Handler, T, void (Handler::*)(T&) const volatile    noexcept>,
+    has_handle_sig<Handler, T, void (Handler::*)(T&) const volatile  &         >,
+    has_handle_sig<Handler, T, void (Handler::*)(T&) const volatile  & noexcept>,
+    has_handle_sig<Handler, T, void (Handler::*)(T&) const volatile &&         >,
+    has_handle_sig<Handler, T, void (Handler::*)(T&) const volatile && noexcept>
+> {};
+
+// Works for any callable, including base classes and convertible types
 template <typename S, typename T>
-concept HasHandlerFor =
+concept HasCallableHandlerFor =
     requires    (S s, T& t) { s.serialize(t);                 } &&
     !requires   (S s      ) { s.serialize(std::declval<T>()); };
+
+// Works only for exact matches, not for base classes or convertible types
+template <typename Handler, typename T>
+concept HasExactHandlerFor = detail::has_exact_handle_for<Handler, T>::value;
+
+template <typename Handler, typename T, bool ExactOnly>
+concept HasHandlerFor = HasExactHandlerFor<Handler, T> || (!ExactOnly && HasCallableHandlerFor<Handler, T>);
+
+} // detail
 
 
 template <template <typename, bool> class... Handlers>
@@ -29,7 +76,7 @@ private:
         using type = type_handler_list<Handlers..., OtherHandlers...>;
     };
 
-    template <typename TSerializer, bool IsReading, typename T>
+    template <typename TSerializer, bool IsReading, typename T, bool ExactOnly>
     static consteval std::size_t get_first_index()
     {
         std::size_t index = 0;
@@ -39,7 +86,7 @@ private:
         {
             using THandler = [: template_param :]<TSerializer, IsReading>;
 
-            if constexpr (HasHandlerFor<THandler, T>)
+            if constexpr (detail::HasHandlerFor<THandler, T, ExactOnly>)
             {
                 return index;
             }
@@ -61,8 +108,8 @@ public:
     template <typename TSerializer, bool IsReading>
     using handler_tuple_t = std::tuple<Handlers<TSerializer, IsReading>...>;
 
-    template <typename TSerializer, bool IsReading, typename T>
-    static constexpr std::size_t get_first_index_v = get_first_index<TSerializer, IsReading, T>();
+    template <typename TSerializer, bool IsReading, typename T, bool ExactOnly = true>
+    static constexpr std::size_t get_first_index_v = get_first_index<TSerializer, IsReading, T, ExactOnly>();
 };
 
 } // reflexx

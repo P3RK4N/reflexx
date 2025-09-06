@@ -29,6 +29,7 @@ add_executable(reflexx_runtime_tests
     "runtime/util/non_serializable_category_type_test.cpp"
     "runtime/util/serializable_number_test.cpp"
     "runtime/util/std_util_test.cpp"
+    "runtime/util/function_traits_test.cpp"
     "runtime/ptr_graph_handler_test.cpp"
     # "runtime/builtin/handlers/default_handler_test.cpp"
     # "runtime/annotations_test.cpp"

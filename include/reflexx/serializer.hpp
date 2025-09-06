@@ -22,6 +22,8 @@
 namespace reflexx
 {
 
+using namespace util;
+
 template <
     serializer_settings SerializerSettings,
     IsBackendType BackendType,
@@ -65,9 +67,8 @@ class serializer final
             {
                 using handler_t = std::tuple_element_t<I, handler_tuple_type>;
 
-                // TODO: Relax this?
                 static_assert(std::derived_from<handler_t, handler_base_type>, "Handler should derive from type_handler with forwarded template params!");
-                static_assert(std::is_nothrow_default_constructible_v<handler_t>, "Handler should be nothrow default constructible!");
+                static_assert(std::is_default_constructible_v<handler_t>, "Handler should be nothrow default constructible!");
                 static_assert(std::is_nothrow_destructible_v<handler_t>, "Handler should be nothrow destructible!");
                 static_assert(std::is_move_constructible_v<handler_t>, "Handler should be move constructible!");
                 static_assert(std::is_move_assignable_v<handler_t>, "Handler should be move constructible!");
@@ -82,7 +83,7 @@ class serializer final
         template <typename T>
         inline constexpr auto& handler_for() noexcept
         {
-            return std::get<handler_list_type::template get_first_index_v<serializer, IsReading, T>>(handlers_);
+            return std::get<handler_list_type::template get_first_index_v<serializer, IsReading, T, util::use_exact_handler_matching_v<SerializerSettings>>>(handlers_);
         }
     };
 

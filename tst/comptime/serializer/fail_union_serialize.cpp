@@ -1,4 +1,4 @@
-#include "../compile_util.hpp"
+#include "comptime/comptest_utils.hpp"
 
 union BadUnion {
     int a;
@@ -9,4 +9,4 @@ struct Wrapper {
     BadUnion u;
 };
 
-auto _ = StrictSerializer::serialize(Wrapper{});
+auto _ = StrictNoOpSerializer::serialize(Wrapper{});

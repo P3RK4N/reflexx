@@ -47,13 +47,13 @@ template <typename T>
 using is_std_map = detail::is_std_map<std::remove_cvref_t<T>>;
 
 template<typename T>
-constexpr bool is_std_map_v = is_std_map<T>::value;
+static inline constexpr bool is_std_map_v = is_std_map<T>::value;
 
 template <typename T>
 using is_std_set = detail::is_std_set<std::remove_cvref_t<T>>;
 
 template<typename T>
-constexpr bool is_std_set_v = is_std_set<std::remove_cvref_t<T>>::value;
+static inline constexpr bool is_std_set_v = is_std_set<std::remove_cvref_t<T>>::value;
 
 } // util
 } // reflexx

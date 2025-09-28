@@ -23,27 +23,24 @@
 
 namespace reflexx::backends {
 
-using namespace c4;
-using namespace yml;
-
 struct ryml_backend
 {
 
 public:
     inline explicit ryml_backend()
-    : tree(64), current_node(tree.rootref())
+    : tree(InitialArenaSize), current_node(tree.rootref())
     {
         
     }
 
     inline explicit ryml_backend(std::span<char> input)
-    : tree(yml::parse_in_place(substr(input.data(), input.size()))), current_node(tree.rootref())
+    : tree(c4::yml::parse_in_place(c4::substr(input.data(), input.size()))), current_node(tree.rootref())
     {
         read_stack.reserve(InitialVectorSize);
     }
 
     inline explicit ryml_backend(std::span<const char> input)
-    : tree(yml::parse_in_arena(csubstr(input.data(), input.size()))), current_node(tree.rootref())
+    : tree(c4::yml::parse_in_arena(c4::csubstr(input.data(), input.size()))), current_node(tree.rootref())
     {
         read_stack.reserve(InitialVectorSize);
     }
@@ -62,14 +59,14 @@ public:
 
     inline void write_key(std::string_view sv) noexcept
     {
-        csubstr key_view = to_csubstr(sv);
-        current_node = current_node.append_child() << key(key_view);
+        c4::csubstr key_view = to_csubstr(sv);
+        current_node = current_node.append_child() << c4::yml::key(key_view);
     }
 
     inline void write_begin_array()
     {
         current_node = current_node.is_seq() ? current_node.append_child() : current_node;
-        current_node |= SEQ;
+        current_node |= c4::yml::SEQ;
     }
 
     inline void write_end_array() noexcept
@@ -80,7 +77,7 @@ public:
     inline void write_begin_object()
     {
         current_node = current_node.is_seq() ? current_node.append_child() : current_node;
-        current_node |= MAP;
+        current_node |= c4::yml::MAP;
     }
 
     inline void write_end_object() noexcept
@@ -93,6 +90,11 @@ public:
     inline void write_number(const T num)
     {
         append_value(num);
+    }
+
+    inline void write_char(char c)
+    {
+        append_value(c);
     }
 
     inline void write_bool(bool b)
@@ -159,6 +161,11 @@ public:
         read_value(num);
     }
 
+    inline void read_char(char& c)
+    {
+        read_value(c);
+    }
+
     inline void read_bool(bool& b)
     {
         read_value(b);
@@ -166,15 +173,20 @@ public:
 
     inline std::string_view read_string()
     {
-        csubstr view {};
+        c4::csubstr view {};
         read_value(view);
         return to_string_view(view);
     }
 
     inline bool read_is_null()
     {
-        auto type = current_node.type();
-        return !type.is_container() && !type.has_val();
+        if (current_node.invalid())
+        {
+            current_node = *read_stack.back().iter;
+            ++read_stack.back().iter;
+        }
+
+        return !current_node.type().is_container() && (!current_node.type().has_val() || current_node.type().val_is_null());
     }
 
     inline void read_skip()
@@ -190,8 +202,8 @@ public:
 private:
     struct ryml_read_ctx
     {
-        NodeRef val;
-        NodeRef::iterator iter;
+        c4::yml::NodeRef val;
+        c4::yml::NodeRef::iterator iter;
     };
 
     /**
@@ -221,15 +233,16 @@ private:
 
         inline ~scoped_node_cacher() noexcept
         {
-            _parent->current_node = NodeRef{};
+            _parent->current_node = c4::yml::NodeRef{};
         }
     };
 
     static constexpr size_t InitialVectorSize = 8;
+    static constexpr size_t InitialArenaSize = 64;
 
-    Tree tree;
+    c4::yml::Tree tree;
 
-    NodeRef current_node;
+    c4::yml::NodeRef current_node;
     std::string write_result;
     
     std::vector<ryml_read_ctx> read_stack;
@@ -251,13 +264,13 @@ private:
     }
 
     template <typename T>
-    requires std::is_same_v<csubstr, T> || std::is_same_v<substr, T>
+    requires std::is_same_v<c4::csubstr, T> || std::is_same_v<c4::substr, T>
     inline std::string_view to_string_view(const T& view)
     {
         return { view.data(), view.size() };
     }
 
-    inline csubstr to_csubstr(const std::string_view& view)
+    inline c4::csubstr to_csubstr(const std::string_view& view)
     {
         return { view.data(), view.size() };
     }

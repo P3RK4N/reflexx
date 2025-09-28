@@ -1,7 +1,7 @@
-#include "../compile_util.hpp"
+#include "comptime/comptest_utils.hpp"
 
 struct Bad {
     int* ptr;
 };
 
-auto __ = []{ Bad b; StrictSerializer::deserialize(b, ""); };
+auto __ = []{ Bad b; StrictNoOpSerializer::deserialize(b, ""); };

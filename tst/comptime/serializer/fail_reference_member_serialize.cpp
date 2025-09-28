@@ -1,4 +1,4 @@
-#include "../compile_util.hpp"
+#include "comptime/comptest_utils.hpp"
 
 struct Bad {
     int& ref;
@@ -7,4 +7,4 @@ struct Bad {
 int dummy = 42;
 Bad b{dummy};
 
-auto _ = StrictSerializer::serialize(b);
+auto _ = StrictNoOpSerializer::serialize(b);

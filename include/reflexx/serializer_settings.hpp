@@ -73,7 +73,7 @@ private:
 
 namespace util {
 
-    template <serializer_settings Settings>
+template <serializer_settings Settings>
 static constexpr bool format_enum_as_string_v =
     Settings.enum_format_policy_ == policies::enum_format_policy::string;
 

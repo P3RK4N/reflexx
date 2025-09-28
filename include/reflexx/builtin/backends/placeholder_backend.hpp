@@ -27,6 +27,7 @@ struct placeholder_backend
     inline constexpr void              write_end_array()                    {               }
     inline constexpr void              write_begin_object()                 {               }
     inline constexpr void              write_end_object()                   {               }
+    inline constexpr void              write_char(char)                     {               }
     inline constexpr void              write_bool(bool)                     {               }
     inline constexpr void              write_string(std::string_view)       {               }
     inline constexpr void              write_null()                         {               }
@@ -40,6 +41,7 @@ struct placeholder_backend
     inline constexpr void              read_end_array()                     {               }
     inline constexpr void              read_begin_object()                  {               }
     inline constexpr void              read_end_object()                    {               }
+    inline constexpr void              read_char(char&)                     {               }
     inline constexpr void              read_bool(bool&)                     {               }
     inline constexpr std::string_view  read_string()                        { return "";    }
     inline constexpr bool              read_is_null()                       { return false; }

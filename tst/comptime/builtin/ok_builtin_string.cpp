@@ -1,4 +1,4 @@
-#include "../compile_util.hpp"
+#include "comptime/comptest_utils.hpp"
 
-auto _ = StrictSerializer::serialize(std::string{"hello"});
-auto __ = []{ std::string s; StrictSerializer::deserialize(s, ""); };
+auto _ = StrictNoOpSerializer::serialize(std::string{"hello"});
+auto __ = []{ std::string s; StrictNoOpSerializer::deserialize(s, ""); };

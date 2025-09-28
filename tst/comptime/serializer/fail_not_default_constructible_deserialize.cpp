@@ -1,7 +1,7 @@
-#include "../compile_util.hpp"
+#include "comptime/comptest_utils.hpp"
 
 struct NoDefaultCtor {
     NoDefaultCtor(int) {}
 };
 
-auto _ = StrictSerializer::deserialize<NoDefaultCtor>("{}");
+auto _ = StrictNoOpSerializer::deserialize<NoDefaultCtor>("{}");

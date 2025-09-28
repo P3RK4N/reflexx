@@ -3,13 +3,14 @@
 
 #include <type_traits>
 
+#include "reflexx/util/serializable_char.hpp"
 #include "reflexx/util/serializable_number.hpp"
 
 namespace reflexx {
 namespace util {
 
 template <typename T>
-static constexpr bool is_non_serializable_category_type_v =
+static inline constexpr bool is_non_serializable_category_type_v =
     std::is_reference_v<T>          ||
     std::is_pointer_v<T>            ||
     std::is_member_pointer_v<T>     ||
@@ -17,7 +18,15 @@ static constexpr bool is_non_serializable_category_type_v =
     std::is_function_v<T>           ||
     std::is_union_v<T>              ||
     std::is_void_v<T>               ||
-    (std::is_arithmetic_v<T> && !is_serializable_number_v<T> && !std::is_same_v<T, bool>);
+    (
+        std::is_arithmetic_v<T> && 
+        !is_serializable_number_v<T> && 
+        !is_serializable_char_v<T> &&
+        !std::is_same_v<T, bool>
+    );
+
+template <typename T>
+concept is_non_serializable_category_type = is_non_serializable_category_type_v<T>;
 
 } // util
 } // reflexx

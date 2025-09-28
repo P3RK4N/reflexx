@@ -1,8 +1,7 @@
-#include <catch2/catch_all.hpp>
+#include "test_utils.hpp"
 
-#include <reflexx/util/std_util.hpp>
-
-TEST_CASE("reflexx::util::is_std_map and is_std_set traits") {
+TEST_CASE("reflexx::util::is_std_map and is_std_set traits")
+{
     // Maps
     STATIC_REQUIRE(reflexx::util::is_std_map_v<std::map<int,int>>);
     STATIC_REQUIRE(reflexx::util::is_std_map_v<std::multimap<int,int>>);

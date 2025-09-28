@@ -31,17 +31,6 @@ namespace reflexx {
 template <typename TSerializer, bool IsReading>
 struct std_handler : type_handler<TSerializer, IsReading>
 {    
-    inline constexpr void serialize(std::string& v) const
-    noexcept(noexcept(this->serialize_string(v)))
-    {
-        this->serialize_string(v);        
-    }
-
-    inline constexpr void serialize(std::string_view& sv) const
-    {
-        this->serialize_string(sv);
-    }
-
     template <typename T1, typename T2>
     inline constexpr void serialize(std::pair<T1, T2>& pair) const
     noexcept(
@@ -60,6 +49,9 @@ struct std_handler : type_handler<TSerializer, IsReading>
     }
 
     // Greedy optional usage
+    // NOTE: Having nested optionals (e.g. optional<optional<T>>) is UB
+    //       Because there is no way to tell if inner or outer optional is empty.
+    //       If you want to support that, write your own handler which stores 'empty' flag too.
     template <typename T>
     inline constexpr void serialize(std::optional<T>& opt) const
     {
@@ -86,6 +78,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
     }
 
     // Greedy pointer usage
+    // NOTE: Look at std::optional handler. Same UB applies here.
     template <typename T>
     inline constexpr void serialize(std::shared_ptr<T>& ptr) const
     {
@@ -112,6 +105,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
     }
 
     // Greedy pointer usage
+    // NOTE: Look at std::optional handler. Same UB applies here.
     template <typename T>
     inline constexpr void serialize(std::unique_ptr<T>& ptr) const
     {
@@ -142,7 +136,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
     {
         this->begin_array();
 
-        template for (constexpr auto i : util::enumerate<sizeof...(Ts)>())
+        template for (constexpr auto i : util::enumerate<sizeof...(Ts)>)
         {
             this->serialize_object(std::get<i>(tuple));
         }
@@ -160,7 +154,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
             std::size_t index{};
             this->serialize_number(index);
 
-            template for (constexpr auto i : util::enumerate<sizeof...(Types)>())
+            template for (constexpr auto i : util::enumerate<sizeof...(Types)>)
             {
                 if (i == index)
                 {
@@ -292,7 +286,7 @@ struct std_handler : type_handler<TSerializer, IsReading>
         this->begin_array();
 
         // MISC: "template for (auto& elem : arr)" not working?
-        template for (constexpr auto I : util::enumerate<N>())
+        template for (constexpr auto I : util::enumerate<N>)
         {
             this->serialize_object(arr[I]);
         }

@@ -1,14 +1,10 @@
 #include <cstring>
 #include <experimental/meta>
+#include <meta>
 #include <print>
 
-#include <catch2/catch_all.hpp>
-
-#include "reflexx/declare.hpp"
-#include "reflexx/serializer_settings.hpp"
-#include "reflexx/serializer.hpp"
-#include "reflexx/builtin/backends/yyjson_backend.hpp"
-#include "reflexx/builtin/backends/ryml_backend.hpp"
+#include "../test_utils.hpp"
+#include "catch2/catch_template_test_macros.hpp"
 
 template <typename... Ts>
 void pyprint(const Ts&... items)
@@ -71,9 +67,7 @@ TEST_CASE( "Playground", "[MISC]" )
         {"a", 1}, {"b", 2}, {"c", 3}
     };
 
-
     pyprint(*s::serialize(original));
     pyprint(*syaml::serialize(original));
     pyprint("Ante");
-
 }

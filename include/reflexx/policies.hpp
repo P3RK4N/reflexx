@@ -1,8 +1,10 @@
 #ifndef REFLEXX_POLICIES_HPP
 #define REFLEXX_POLICIES_HPP
 
-namespace reflexx {
-namespace policies {
+// TODO: Greedyness
+// TODO: Marching policy (by order or by key)
+
+namespace reflexx::policies {
 
 enum class enum_format_policy
 {
@@ -16,7 +18,6 @@ enum class handler_matching_policy
     callable
 };
 
-} // policies
-} // reflexx
+} // reflexx::policies
 
 #endif

@@ -1,9 +1,4 @@
-#include <catch2/catch_all.hpp>
-
-#include "catch2/catch_test_macros.hpp"
-#include "reflexx/util/function_traits.hpp"
-
-using namespace reflexx::util;
+#include "test_utils.hpp"
 
 int free_func          (int, double)          { return 42; }
 int free_func_noexcept (int        ) noexcept { return  0; }
@@ -31,13 +26,13 @@ TEST_CASE("function_traits on free functions")
 {
     using traits = function_traits<decltype(free_func)>;
     STATIC_REQUIRE(std::is_same_v<typename traits::return_type, int>);
+    STATIC_REQUIRE(std::is_same_v<typename traits::args_types,  std::tuple<int, double>>);
     STATIC_REQUIRE(traits::args_size == 2);
-    STATIC_REQUIRE(std::is_same_v<typename traits::args_types, std::tuple<int, double>>);
 
     using traits_noexcept = function_traits<decltype(free_func_noexcept)>;
     STATIC_REQUIRE(std::is_same_v<typename traits_noexcept::return_type, int>);
-    STATIC_REQUIRE(traits_noexcept::args_size == 1);
     STATIC_REQUIRE(std::is_same_v<typename traits_noexcept::args_types, std::tuple<int>>);
+    STATIC_REQUIRE(traits_noexcept::args_size == 1);
 }
 
 TEST_CASE("function_traits on function pointers")

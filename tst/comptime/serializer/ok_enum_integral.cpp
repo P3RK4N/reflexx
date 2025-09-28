@@ -1,4 +1,4 @@
-#include "../compile_util.hpp"
+#include "comptime/comptest_utils.hpp"
 
 enum class Status { OK, Error };
 
@@ -6,5 +6,5 @@ struct Result {
     Status status;
 };
 
-auto _ = StrictSerializer::serialize(Result{});
-auto __ = []{ Result r; StrictSerializer::deserialize(r, ""); };
+auto _ = StrictNoOpSerializer::serialize(Result{});
+auto __ = []{ Result r; StrictNoOpSerializer::deserialize(r, ""); };

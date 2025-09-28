@@ -1,8 +1,9 @@
-#include "../compile_util.hpp"
+#include "comptime/comptest_utils.hpp"
+
 
 struct Container {
     std::vector<int> numbers;
 };
 
-auto _ = StrictSerializer::serialize(Container{});
-auto __ = []{ Container c; StrictSerializer::deserialize(c, ""); };
+auto _ = StrictNoOpSerializer::serialize(Container{});
+auto __ = []{ Container c; StrictNoOpSerializer::deserialize(c, ""); };

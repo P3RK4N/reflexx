@@ -1,9 +1,9 @@
-#include "../compile_util.hpp"
+#include "comptime/comptest_utils.hpp"
 
 struct Person {
     std::string name;
     int age;
 };
 
-auto _ = StrictSerializer::serialize(Person{"Ana", 23});
-auto __ = []{ Person p{"", 0}; StrictSerializer::deserialize(p, ""); };
+auto _ = StrictNoOpSerializer::serialize(Person{"Ana", 23});
+auto __ = []{ Person p{"", 0}; StrictNoOpSerializer::deserialize(p, ""); };

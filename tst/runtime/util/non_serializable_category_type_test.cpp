@@ -1,58 +1,111 @@
-#include <stdexcept>
+#include "test_utils.hpp"
 
-#include <catch2/catch_all.hpp>
+TEST_CASE("is_non_serializable_category_type_v trait")
+{
 
-#include "catch2/catch_test_macros.hpp"
-#include "reflexx/util/non_serializable_category_type.hpp"
-
-using namespace reflexx::util;
-
-TEST_CASE("is_non_serializable_category_type_v trait", "[type_category]") {
-
-    SECTION("Lvalue reference") {
+    SECTION("Lvalue reference")
+    {
         STATIC_REQUIRE(is_non_serializable_category_type_v<int&>);
     }
 
-    SECTION("Rvalue reference") {
+    SECTION("Rvalue reference")
+    {
         STATIC_REQUIRE(is_non_serializable_category_type_v<int&&>);
     }
 
-    SECTION("Pointer to int") {
+    SECTION("Pointer")
+    {
         STATIC_REQUIRE(is_non_serializable_category_type_v<int*>);
     }
 
-    SECTION("Pointer to member") {
+    SECTION("Pointer to member")
+    {
         struct S { int m; };
+
         STATIC_REQUIRE(is_non_serializable_category_type_v<int S::*>);
     }
 
-    SECTION("Unbounded array") {
+    SECTION("Unbounded array")
+    {
         STATIC_REQUIRE(is_non_serializable_category_type_v<int[]>);
     }
 
-    SECTION("Function type") {
+    SECTION("Function type")
+    {
         using Fn = void(int);
+    
         STATIC_REQUIRE(is_non_serializable_category_type_v<Fn>);
     }
 
-    SECTION("Union type") {
+    SECTION("Union type")
+    {
         union U { int a; float b; };
+
         STATIC_REQUIRE(is_non_serializable_category_type_v<U>);
     }
 
-    SECTION("Class type") {
-        struct C {};
-        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<C>);
+    SECTION("Void type")
+    {
+        STATIC_REQUIRE(is_non_serializable_category_type_v<void>);
     }
 
-    SECTION("Fundamental type") {
-        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<int>);
-        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<double>);
+    SECTION("Serializable numbers")
+    {
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<int>           );
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<unsigned int>  );
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<long>          );
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<unsigned long> );
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<short>         );
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<unsigned short>);
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<std::uint8_t>  );
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<std::int8_t>   );
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<std::uint16_t> );
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<std::int16_t>  );
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<std::uint32_t> );
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<std::int32_t>  );
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<std::uint64_t> );
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<std::int64_t>  );
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<float>         );
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<double>        );
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<signed char>   );
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<unsigned char> );
+        
+        // TODO: Check this out
+        STATIC_REQUIRE      (is_non_serializable_category_type_v<long double>   );
+    }
+
+    SECTION("Serializable chars")
+    {
+        STATIC_REQUIRE(is_non_serializable_category_type_v<wchar_t>);
+        STATIC_REQUIRE(is_non_serializable_category_type_v<char32_t>);
+        STATIC_REQUIRE(is_non_serializable_category_type_v<char16_t>);
+        STATIC_REQUIRE(is_non_serializable_category_type_v<char16_t>);
+
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<char>);
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<char8_t>);
+    }
+
+    SECTION("Boolean type")
+    {
         STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<bool>);
     }
 
-    SECTION("Bounded array type") {
-        STATIC_REQUIRE(!is_non_serializable_category_type_v<int[5]>);
+    SECTION("Class type")
+    {
+        struct C {};
+    
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<C>);
     }
 
+    SECTION("Bounded array")
+    {
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<int[5]>);
+    }
+
+    SECTION("Enum")
+    {
+        enum E { A, B };
+
+        STATIC_REQUIRE_FALSE(is_non_serializable_category_type_v<E>);
+    }
 }

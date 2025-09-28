@@ -6,8 +6,6 @@
 #include <type_traits>
 #include <meta>
 
-#include "reflexx/util/unconstructible.hpp"
-
 namespace reflexx::util {
 namespace detail {
 
@@ -18,7 +16,7 @@ namespace detail {
 */
 
 template<typename T, typename = void>
-struct function_traits : unconstructible
+struct function_traits
 {
     static_assert(false, "Unsupported object!");
 };
@@ -30,29 +28,29 @@ struct function_traits : unconstructible
 */
 
 template <typename R, typename... Args>
-struct function_traits<R(Args...)> : unconstructible
+struct function_traits<R(Args...)>
 {
     using return_type = R;
     using args_types = std::tuple<Args...>;
-    inline static constexpr std::size_t args_size = sizeof...(Args);
+    static inline constexpr std::size_t args_size = sizeof...(Args);
 
     template <typename Callable>
     requires std::is_invocable_v<Callable, std::meta::info>
-    inline static consteval void static_foreach_arg(Callable c)
+    static inline consteval void static_foreach_arg(Callable c)
     {
         (c(^^Args), ...);
     }
 
     template <typename Callable>
     requires std::is_invocable_r_v<bool, Callable, std::meta::info>
-    inline static consteval bool static_all_of_args(Callable c)
+    static inline consteval bool static_all_of_args(Callable c)
     {
         return (c(^^Args) && ... && true);
     }
     
     template <typename Callable>
     requires std::is_invocable_r_v<bool, Callable, std::meta::info>
-    inline static consteval bool static_any_of_args(Callable c)
+    static inline consteval bool static_any_of_args(Callable c)
     {
         return (c(^^Args) || ... || false);
     }
@@ -181,19 +179,19 @@ struct function_traits<T, std::void_t<decltype(&T::operator())>> : function_trai
 } // detail
     
 template <typename T>
-struct function_traits : detail::function_traits<T> {};
+struct function_traits : detail::function_traits<std::remove_cvref_t<T>> {};
 
 template <typename T>
-struct is_function_traits_t                     : std::false_type {};
+struct is_function_traits_t                     : std::false_type        {};
 
 template <typename T>
-struct is_function_traits_t<function_traits<T>> : std::true_type  {};
+struct is_function_traits_t<function_traits<T>> : std::true_type         {};
 
 template <typename T>
 concept is_function_traits = is_function_traits_t<T>::value;
 
-template <typename T1, typename T2>
-inline constexpr bool are_function_traits_same_v = 
+template <is_function_traits T1, is_function_traits T2>
+static inline constexpr bool are_function_traits_same_v = 
     std::is_same_v<typename T1::return_type, typename T2::return_type> && 
     std::is_same_v<typename T1::args_types,  typename T2::args_types >;
 

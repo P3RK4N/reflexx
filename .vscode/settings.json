@@ -4,6 +4,7 @@
         "-G", "Ninja Multi-Config",
         "-DCMAKE_TOOLCHAIN_FILE=${workspaceFolder}/cmake/clang.toolchain.cmake"
     ],
+    "cmake.ctestArgs": ["-V", "--reporter", "console::verbosity=high"],
     "C_Cpp.intelliSenseEngine": "disabled",
     "clangd.path": "${workspaceFolder}/bin/clang-p2996/install/bin/clangd",
     "clangd.arguments": [
@@ -11,5 +12,6 @@
         "--log=verbose",
         "-pretty",
         "--background-index=false",
-    ]
+    ],
+    "terminal.integrated.scrollback": 10000
 }

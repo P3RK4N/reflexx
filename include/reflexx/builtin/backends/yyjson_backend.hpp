@@ -99,6 +99,11 @@ public:
         }
     }
 
+    inline void write_char(const char c) noexcept
+    {
+        append_value(yyjson_mut_strn(write_doc, &c, 1));
+    }
+
     inline void write_bool(const bool b) noexcept
     {
         append_value(yyjson_mut_bool(write_doc, b));
@@ -174,6 +179,13 @@ public:
         {
             val = static_cast<T>(unsafe_yyjson_get_uint(val_cache));
         }
+    }
+
+    inline void read_char(char& c) noexcept
+    {
+        scoped_val_cacher _ { this };
+
+        c = *unsafe_yyjson_get_str(val_cache);
     }
 
     inline void read_bool(bool& b) noexcept

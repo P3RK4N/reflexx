@@ -1,7 +1,7 @@
-#include "../compile_util.hpp"
+#include "comptime/comptest_utils.hpp"
 
 struct Bad {
     int* ptr;
 };
 
-auto _ = StrictSerializer::serialize(Bad{});
+auto _ = StrictNoOpSerializer::serialize(Bad{});

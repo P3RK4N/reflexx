@@ -1,4 +1,5 @@
-#include "../compile_util.hpp"
+#include "comptime/comptest_utils.hpp"
+
 
 struct test_struct
 {
@@ -17,7 +18,7 @@ struct test_struct
 };
 
 template <typename TSerializer, bool IsReading>
-struct test_struct_handler : public reflexx::type_handler<TSerializer, IsReading>
+struct test_struct_handler : public type_handler<TSerializer, IsReading>
 {
     void serialize(test_struct& obj)
     {
@@ -25,5 +26,7 @@ struct test_struct_handler : public reflexx::type_handler<TSerializer, IsReading
     }
 };
 
-template class test_struct_handler<StrictSerializer, false>;
-template class test_struct_handler<StrictSerializer, true>;
+using my_serializer = serializer<serializer_settings::Strict(), placeholder_backend, type_handler_list<test_struct_handler, default_handler>>;
+
+auto _ = my_serializer::serialize(test_struct{});
+auto __ = []{ Container c; my_serializer::deserialize<test_struct>(""); };

@@ -4,11 +4,11 @@
 #include <experimental/meta>
 #include <span>
 
-namespace reflexx {
-namespace util {
+namespace reflexx::util {
+namespace detail {
 
 template <std::size_t N>
-consteval static std::span<const std::size_t> enumerate()
+static inline consteval std::span<const std::size_t> enumerate()
 {
     std::array<std::size_t, N> arr;
 
@@ -20,7 +20,11 @@ consteval static std::span<const std::size_t> enumerate()
     return std::define_static_array(arr);
 }    
 
-} // util
-} // reflexx
+} // detail
+
+template <std::size_t N>
+static inline constexpr std::span<const std::size_t> enumerate = detail::enumerate<N>(); 
+
+} // reflexx::util
 
 #endif

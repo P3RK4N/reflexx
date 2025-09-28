@@ -22,17 +22,27 @@ include(Catch)
 add_executable(reflexx_runtime_tests
     "runtime/playground.cpp"
     "runtime/complex.cpp"
-    "runtime/backends_test.cpp"
     "runtime/type_handler_list_test.cpp"
+
     "runtime/util/class_util_test.cpp"
     "runtime/util/enum_conv_test.cpp"
     "runtime/util/non_serializable_category_type_test.cpp"
     "runtime/util/serializable_number_test.cpp"
+    "runtime/util/serializable_char_test.cpp"
+    "runtime/util/serializable_enum_test.cpp"
+    "runtime/util/serializable_enum_test.cpp"
+    "runtime/util/serializable_string_test.cpp"
+    "runtime/util/serializable_class_test.cpp"
+    "runtime/util/enumerate_test.cpp"
     "runtime/util/std_util_test.cpp"
     "runtime/util/function_traits_test.cpp"
-    "runtime/ptr_graph_handler_test.cpp"
+    
+    "runtime/builtin/backends/backends_test.cpp"
+
+    "runtime/builtin/handlers/std_handler_test.cpp"
+    "runtime/builtin/handlers/ptr_graph_handler_test.cpp"
+
     # "runtime/builtin/handlers/default_handler_test.cpp"
-    # "runtime/annotations_test.cpp"
 )
 set_target_properties(
     reflexx_runtime_tests 
@@ -43,8 +53,8 @@ set_target_properties(
 )
 target_compile_options(reflexx_runtime_tests PRIVATE -g -O0 -fprofile-instr-generate -fcoverage-mapping -fno-inline -fno-omit-frame-pointer -fsanitize=address,undefined)
 target_link_libraries(reflexx_runtime_tests PRIVATE reflexx Catch2::Catch2WithMain -fprofile-instr-generate -fsanitize=address,undefined)
+target_include_directories(reflexx_runtime_tests PRIVATE ${reflexx_project_SOURCE_DIR}/tst)
 catch_discover_tests(reflexx_runtime_tests)
-
 
 ############################################################
 #################### COMPTIME TESTS ########################
@@ -67,7 +77,7 @@ foreach(source_file IN LISTS REFLEXX_COMPILE_TESTS)
         ${should_fail}
         SOURCE_FILE "${source_file}"
         TOOLCHAIN_FILE "${CMAKE_TOOLCHAIN_FILE}"
-        INCLUDE_DIRS "${reflexx_project_SOURCE_DIR}/include"
+        INCLUDE_DIRS "${reflexx_project_SOURCE_DIR}/include" ${reflexx_project_SOURCE_DIR}/tst
     )
 endforeach()
 

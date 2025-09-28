@@ -132,14 +132,14 @@ protected:
         __ctx__->backend_.write_string(sv);
     }
 
-    template <util::SerializableNumber T>
+    template <util::is_serializable_number T>
     constexpr inline void serialize_number(T& value) const 
     noexcept(noexcept(__ctx__->backend_.write_number(value))) requires IsReading
     {
         __ctx__->backend_.read_number(value);
     }
 
-    template <util::SerializableNumber T>
+    template <util::is_serializable_number T>
     constexpr inline void serialize_number(const T value) const 
     noexcept(noexcept(__ctx__->backend_.write_number(value))) requires IsWriting
     {

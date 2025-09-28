@@ -1,60 +1,42 @@
 #ifndef REFLEXX_ENUM_CONV_HPP
 #define REFLEXX_ENUM_CONV_HPP
 
-#include <experimental/meta>
+#include <meta>
 #include <string_view>
-#include <stdexcept>
-#include <type_traits>
+#include <cassert>
 
-namespace reflexx {
-namespace util {
+#include "reflexx/util/serializable_enum.hpp"
+
+namespace reflexx::util {
     
-template<typename E, bool Enumerable = std::meta::is_enumerable_type(^^std::remove_cvref_t<E>)>
-requires std::is_enum_v<std::remove_cvref_t<E>>
-constexpr std::string_view enum_to_string(E value)
+template<is_serializable_enum E>
+static inline constexpr std::string_view enum_to_string(E value) noexcept
 {
-    if constexpr (Enumerable)
+    template for (constexpr auto e : std::define_static_array(std::meta::enumerators_of(^^std::remove_cvref_t<E>)))
     {
-        template for (constexpr auto e : std::define_static_array(std::meta::enumerators_of(^^std::remove_cvref_t<E>)))
+        if (value == [: e :])
         {
-            if (value == [: e :])
-            {
-                return std::meta::identifier_of(e);
-            }
+            return std::meta::identifier_of(e);
         }
-
-        throw std::invalid_argument("Invalid enum value!");
     }
-    else
-    {
-        static_assert(false, "Not an enumerable type!");
-    };
+
+    assert(false && "Invalid enum value");
 }
 
-template <typename E, bool Enumerable = std::meta::is_enumerable_type(^^std::remove_cvref_t<E>)>
-requires std::is_enum_v<std::remove_cvref_t<E>>
-constexpr E string_to_enum(std::string_view name)
+template <is_serializable_enum E>
+static inline constexpr E string_to_enum(std::string_view name) noexcept
 {
-    if constexpr (Enumerable)
+    template for (constexpr auto e : std::define_static_array(std::meta::enumerators_of(^^std::remove_cvref_t<E>)))
     {
-        template for (constexpr auto e : std::define_static_array(std::meta::enumerators_of(^^std::remove_cvref_t<E>)))
+        if (name == std::meta::identifier_of(e))
         {
-            if (name == std::meta::identifier_of(e))
-            {
-                return [: e :];
-            }
+            return [: e :];
         }
-
-        throw std::invalid_argument("Invalid enum name: " + std::string(name));
     }
-    else
-    {
-        static_assert(false, "Not an enumerable type!");
-    };
+
+    assert(false && "Invalid enum name");
 }
 
-
-} // util
-} // reflexx
+} // reflexx::util
 
 #endif

@@ -1,14 +1,4 @@
-#include <catch2/catch_all.hpp>
-
-#include <reflexx/builtin/handlers/ptr_graph_handler.hpp>
-
-#include <reflexx/backend.hpp>
-#include <reflexx/serializer.hpp>
-#include <reflexx/builtin/backends/yyjson_backend.hpp>
-
-using handler_list_t = reflexx::type_handler_list<reflexx::ptr_graph_handler, reflexx::std_handler, reflexx::default_handler>;
-using serializer = reflexx::serializer<reflexx::serializer_settings::Strict(), reflexx::backends::yyjson_backend, handler_list_t>;
-
+#include "test_utils.hpp"
 
 struct Node
 {
@@ -34,7 +24,17 @@ struct reflexx::provider<Node>
 };
 
 
-TEST_CASE("Cyclic graph with shared_ptr") {
+template <typename TSerializer>
+using TSerializerWithGraphHandler = serializer
+<
+    TSerializer::settings,
+    typename TSerializer::backend_type,
+    typename type_handler_list<reflexx::ptr_graph_handler>::extend<typename TSerializer::handler_list_type>
+>;
+
+TEMPLATE_LIST_TEST_CASE("Cyclic graph with shared_ptr", "", serializers_list)
+{
+    using serializer = TSerializerWithGraphHandler<TestType>;
 
     // Create cyclic graph:
     //
@@ -52,7 +52,7 @@ TEST_CASE("Cyclic graph with shared_ptr") {
     std::shared_ptr<Node> original { A };
 
     auto result = serializer::serialize(original);
-    auto deserialized_holder { serializer::deserialize<std::shared_ptr<Node>>(result.get()) };
+    auto deserialized_holder { serializer::template deserialize<std::shared_ptr<Node>>(result.get()) };
     auto& deserialized = *deserialized_holder;
     
     REQUIRE(deserialized->id == 1);
@@ -62,7 +62,10 @@ TEST_CASE("Cyclic graph with shared_ptr") {
     REQUIRE(deserialized->neighbors[0].lock()->neighbors[0].lock() == deserialized); // check cycle
 }
 
-TEST_CASE("DAG graph with shared_ptr") {
+TEMPLATE_LIST_TEST_CASE("DAG graph with shared_ptr", "", serializers_list)
+{
+    using serializer = TSerializerWithGraphHandler<TestType>;
+
     auto A { std::make_shared<Node>(1) };
     auto B { std::make_shared<Node>(2) };
     auto C { std::make_shared<Node>(3) };
@@ -75,7 +78,7 @@ TEST_CASE("DAG graph with shared_ptr") {
     root->neighbors.push_back(B);
 
     auto result = serializer::serialize(root);
-    auto deserialized_holder { serializer::deserialize<std::shared_ptr<Node>>(result.get()) };
+    auto deserialized_holder { serializer::template deserialize<std::shared_ptr<Node>>(result.get()) };
     auto& deserialized = *deserialized_holder;
 
     REQUIRE(deserialized->id == 0);
@@ -90,7 +93,10 @@ TEST_CASE("DAG graph with shared_ptr") {
     REQUIRE(A_des->neighbors[0].lock()->id == 3);
 }
 
-TEST_CASE("Deep graph with cycle at the end") {
+TEMPLATE_LIST_TEST_CASE("Deep graph with cycle at the end", "", serializers_list)
+{
+    using serializer = TSerializerWithGraphHandler<TestType>;
+
     auto A { std::make_shared<Node>(1) };
     auto B { std::make_shared<Node>(2) };
     auto C { std::make_shared<Node>(3) };
@@ -102,21 +108,24 @@ TEST_CASE("Deep graph with cycle at the end") {
     D->neighbors.push_back(A); // cycle
 
     auto result = serializer::serialize(A);
-    auto deserialized_holder { serializer::deserialize<std::shared_ptr<Node>>(result.get()) };
+    auto deserialized_holder { serializer::template deserialize<std::shared_ptr<Node>>(result.get()) };
     auto& deserialized = *deserialized_holder;
 
     REQUIRE(deserialized->id == 1);
     REQUIRE(deserialized->neighbors[0].lock()->neighbors[0].lock()->neighbors[0].lock()->neighbors[0].lock() == deserialized);
 }
 
-TEST_CASE("Graph with nullptr in neighbors") {
+TEMPLATE_LIST_TEST_CASE("Graph with nullptr in neighbors", "", serializers_list)
+{
+    using serializer = TSerializerWithGraphHandler<TestType>;
+
     auto A { std::make_shared<Node>(1) };
     auto B { std::make_shared<Node>(0) };
     A->neighbors.push_back(std::shared_ptr<Node>(nullptr));
     A->neighbors.push_back(B);
 
     auto result = serializer::serialize(A);
-    auto deserialized_holder { serializer::deserialize<std::shared_ptr<Node>>(result.get()) };
+    auto deserialized_holder { serializer::template deserialize<std::shared_ptr<Node>>(result.get()) };
     auto& deserialized = *deserialized_holder;
 
     REQUIRE(deserialized->id == 1);

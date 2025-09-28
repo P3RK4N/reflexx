@@ -6,13 +6,12 @@
 #include <vector>
 #include <cassert>
 
-namespace reflexx {
-namespace util {
+namespace reflexx::util {
 namespace detail {
 
 template <typename T>
 requires std::is_class_v<T>
-consteval bool has_virtual_base_impl()
+static inline consteval bool has_virtual_base_impl()
 {
     std::vector<std::meta::info> slice_types { ^^T };
 
@@ -37,7 +36,7 @@ consteval bool has_virtual_base_impl()
 
 template <typename T>
 requires std::is_class_v<T>
-consteval bool has_ambigous_non_static_data_members_impl()
+static inline consteval bool has_ambigous_non_static_data_members_impl()
 {
     std::vector<std::string_view> member_names {};
     std::vector<std::meta::info> slice_types { ^^T };
@@ -70,12 +69,11 @@ consteval bool has_ambigous_non_static_data_members_impl()
 } // detail
 
 template <typename T>
-static constexpr bool has_virtual_base_v = detail::has_virtual_base_impl<std::remove_cvref_t<T>>();
+static inline constexpr bool has_virtual_base_v = detail::has_virtual_base_impl<std::remove_cvref_t<T>>();
 
 template <typename T>
-static constexpr bool has_ambigous_non_static_data_members_v = detail::has_ambigous_non_static_data_members_impl<std::remove_cvref_t<T>>();
+static inline constexpr bool has_ambigous_non_static_data_members_v = detail::has_ambigous_non_static_data_members_impl<std::remove_cvref_t<T>>();
 
-} // util
-} // reflexx
+} // reflexx::util
 
 #endif

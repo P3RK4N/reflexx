@@ -62,7 +62,7 @@ if (REFLEXX_ENABLE_YAML OR TARGET ryml)
         CPMAddPackage(
             NAME rapidyaml
             GITHUB_REPOSITORY biojppm/rapidyaml
-            GIT_TAG v0.9.0
+            GIT_TAG master
         )
     endif()
     list(APPEND REFLEXX_BACKEND_LIBS ryml)

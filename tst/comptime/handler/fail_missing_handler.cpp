@@ -1,10 +1,5 @@
-#include "../compile_util.hpp"
+#include "comptime/comptest_utils.hpp"
 
-using serializer = reflexx::serializer<reflexx::serializer_settings::Strict(), MyBackend, reflexx::type_handler_list<>>;
+using my_serializer = serializer<StrictSettings, placeholder_backend, type_handler_list<>>;
 
-struct S
-{
-    int i;
-};
-
-auto _ = serializer::serialize(S{});
+auto _ = my_serializer::serialize(Empty{});

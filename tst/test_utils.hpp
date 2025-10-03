@@ -140,9 +140,8 @@ constexpr serializer_settings serializer_settings_matrix[] =
     RelaxedSettings 
 };
 
-using backends_t = std::tuple
+using backends_list = std::tuple
 <
-    placeholder_backend, 
     yyjson_backend, 
     ryml_backend
 >;

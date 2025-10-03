@@ -194,6 +194,7 @@ TEMPLATE_LIST_TEST_CASE("std::optional<int> - engaged", "", serializers_list)
 }
 
 // NOTE: optional<optional<T>> is UB (look up std_handler for details)
+// TODO: Static assert in std_handler to prevent this
 // TEMPLATE_LIST_TEST_CASE("std::optional<int> - empty", "", serializers_list)
 // {
 //     using T = TestType;

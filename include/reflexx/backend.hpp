@@ -88,7 +88,8 @@ concept IsBackendType =
          *  #################################################################
          */
 
-        { backend.read_key(sv)          } -> std::same_as<void>;
+        // Must enter value scope, even if key does not exist! Consider having cheap sentinel null value
+        { backend.read_key(sv)          } -> std::same_as<bool>;
         { backend.read_key()            } -> std::same_as<std::string_view>;
         { backend.read_begin_array()    } -> std::same_as<void>;
         { backend.read_end_array()      } -> std::same_as<void>;

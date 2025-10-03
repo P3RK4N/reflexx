@@ -3,6 +3,7 @@
 
 #include <experimental/meta>
 
+#include "reflexx/serializer_settings.hpp"
 #include "reflexx/util/class_util.hpp"
 #include "reflexx/type_handler.hpp"
 

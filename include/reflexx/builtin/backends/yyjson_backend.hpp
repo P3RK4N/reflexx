@@ -125,9 +125,16 @@ public:
     *   ###################################
     */
 
-    inline void read_key(std::string_view key) noexcept
+    inline bool read_key(std::string_view key) noexcept
     {
+        static constinit yyjson_val sentinel = { .tag = YYJSON_TYPE_NULL };
         val_cache = yyjson_obj_getn(read_stack.back().val, key.data(), key.size());
+        if (!val_cache)
+        {
+            val_cache = &sentinel;
+            return false;
+        }
+        return true;
     }
 
     inline std::string_view read_key() noexcept

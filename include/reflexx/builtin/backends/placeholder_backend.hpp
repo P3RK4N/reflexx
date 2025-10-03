@@ -35,7 +35,7 @@ struct placeholder_backend
     template <typename T>
     requires util::is_serializable_number_v<T>
     inline constexpr void              read_number(T&)                      {               }
-    inline constexpr void              read_key(std::string_view)           {               }
+    inline constexpr bool              read_key(std::string_view)           { return true;  }
     inline constexpr std::string_view  read_key()                           { return {};    }
     inline constexpr void              read_begin_array()                   {               }
     inline constexpr void              read_end_array()                     {               }

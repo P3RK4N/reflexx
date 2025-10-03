@@ -118,9 +118,15 @@ public:
     *   ###################################
     */
 
-    inline void read_key(std::string_view key)
+    inline bool read_key(std::string_view key)
     {
-        current_node = read_stack.back().val[to_csubstr(key)];
+        current_node = read_stack.back().val.find_child(to_csubstr(key));
+        if (current_node.invalid())
+        {
+            current_node = null_sentinel();
+            return false;
+        }
+        return true;
     }
 
     inline std::string_view read_key()
@@ -236,6 +242,13 @@ private:
             _parent->current_node = c4::yml::NodeRef{};
         }
     };
+
+    // Null sentinel workaround
+    static inline const ryml::NodeRef null_sentinel()
+    {
+        static ryml::Tree t { 1 };
+        return t.rootref();
+    }
 
     static constexpr size_t InitialVectorSize = 8;
     static constexpr size_t InitialArenaSize = 64;

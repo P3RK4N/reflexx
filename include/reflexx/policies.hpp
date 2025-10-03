@@ -18,6 +18,12 @@ enum class handler_matching_policy
     callable
 };
 
+enum class missing_field_policy
+{
+    disallow,
+    treat_as_null
+};
+
 } // reflexx::policies
 
 #endif

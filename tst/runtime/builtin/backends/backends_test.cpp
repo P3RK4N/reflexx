@@ -163,3 +163,47 @@ TEMPLATE_LIST_TEST_CASE("serializable nested combinations", "", serializers_list
         roundtrip_check<T>(outer);
     }
 }
+
+
+template <typename TSerializer, bool IsReading>
+struct lossy_handler : type_handler<TSerializer, IsReading>
+{
+    void serialize(auto& val) requires (!IsReading)
+    {
+        this->begin_object();
+            // Adios, loss of loved values
+        this->end_object();
+    }
+
+    void serialize(auto& val) requires IsReading
+    {
+        this->begin_object();
+            this->key("Reading non-existing key bro!");
+            if (this->is_null()) val = 1;
+            else                 val = 0;
+        this->end_object();
+    }
+};
+
+TEMPLATE_LIST_TEST_CASE("deserializing missing schema fields", "", backends_list)
+{
+    // Serializer with lossy writing
+    using T = serializer<RelaxedSettings, TestType, type_handler_list<lossy_handler, default_handler>>;
+
+    struct Something
+    {
+        int x = 42;
+
+        Something& operator=(int v)
+        {
+            x = v;
+            return *this;
+        }
+    };
+
+    Something smth {};
+    auto ser = T::serialize(smth);
+    auto deser = T::template deserialize<Something>(*ser);
+
+    REQUIRE(deser.get().x == 1);
+}

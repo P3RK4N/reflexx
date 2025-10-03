@@ -43,6 +43,7 @@ struct serializer_settings final
 
         settings.enum_format_policy_                = enum_format_policy::integral;
         settings.handler_matching_policy_           = handler_matching_policy::exact;
+        settings.missing_field_policy_              = missing_field_policy::disallow;
         settings.ignore_non_serializable_members_   = false;
 
         return settings; 
@@ -54,6 +55,7 @@ struct serializer_settings final
 
         settings.enum_format_policy_                = enum_format_policy::string;
         settings.handler_matching_policy_           = handler_matching_policy::callable;
+        settings.missing_field_policy_              = missing_field_policy::treat_as_null;
         settings.ignore_non_serializable_members_   = true;
 
         return settings;
@@ -61,6 +63,7 @@ struct serializer_settings final
 
     DECLARE_POLICY(enum_format_policy);
     DECLARE_POLICY(handler_matching_policy);
+    DECLARE_POLICY(missing_field_policy);
     
     DECLARE_PROPERTY(bool, ignore_non_serializable_members);
 
@@ -84,6 +87,10 @@ static constexpr bool use_exact_handler_matching_v =
 template <serializer_settings Settings>
 static constexpr bool ignore_non_serializable_members_v =
     Settings.ignore_non_serializable_members_;
+
+template <serializer_settings Settings>
+static constexpr bool treat_missing_fields_as_null_v =
+    Settings.missing_field_policy_ == missing_field_policy::treat_as_null;
 
 /*
     If we are not ignoring anything, we should definitively try to handle member.

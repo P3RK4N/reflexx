@@ -86,24 +86,24 @@ class serializer final
         }
     };
 
+    static constexpr bool Read  = true;
+    static constexpr bool Write = !Read;
+
+    using read_context   = serializer_context<Read>;
+    using write_context  = serializer_context<Write>;
+    using result_context = std::variant<read_context, write_context>;
+
+    friend result_context;
+
 /*
     #########################################################################
     ############################# Interface #################################    
     #########################################################################
 */
 public:
-    static constexpr serializer_settings    settings            = SerializerSettings;
-    static constexpr bool                   Read                = true;
-    static constexpr bool                   Write               = !Read;
-    
+    static constexpr serializer_settings    settings            = SerializerSettings;    
     using                                   handler_list_type   = TypeHandlerList;
     using                                   backend_type        = BackendType;
-    using                                   read_context        = serializer_context<Read>;
-    using                                   write_context       = serializer_context<Write>;
-    using                                   result_context      = std::variant<read_context, write_context>;
-
-
-    friend result_context;
 
     // TODO: Test access
     // TODO: Merge with context, there is no need for 2 internal structs, or is there?

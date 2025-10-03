@@ -36,7 +36,12 @@ protected:
     constexpr inline void key(std::string_view key) const 
     noexcept(noexcept(__ctx__->backend_.read_key(key))) requires IsReading
     {
-        __ctx__->backend_.read_key(key);
+        bool has_key = __ctx__->backend_.read_key(key);
+
+        if constexpr (!util::treat_missing_fields_as_null_v<TSerializer::settings>)
+        {
+            assert(has_key && "Key does not exist");
+        }
     }
 
     constexpr inline void key(std::string_view key) const

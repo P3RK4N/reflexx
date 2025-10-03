@@ -5,7 +5,7 @@
 #include <string_view>
 #include <cassert>
 
-#include "reflexx/util/serializable_enum.hpp"
+#include "reflexx/util/serializable.hpp"
 
 namespace reflexx::util {
     

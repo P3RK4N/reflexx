@@ -16,9 +16,7 @@
 
 #include "reflexx/util/std_util.hpp"
 #include "reflexx/util/function_traits.hpp"
-#include "reflexx/util/serializable_enum.hpp"
-#include "reflexx/util/serializable_string.hpp"
-#include "reflexx/util/serializable_class.hpp"
+#include "reflexx/util/serializable.hpp"
 
 #include <tuple>
 #include <cstdint>

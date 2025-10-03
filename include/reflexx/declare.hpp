@@ -2,6 +2,7 @@
 #define REFLEXX_DECLARE_HPP
 
 #include "reflexx/backend.hpp"
+#include "reflexx/util/serializable.hpp"
 #include "reflexx/serializer_settings.hpp"
 
 namespace reflexx {

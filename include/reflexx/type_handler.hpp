@@ -4,9 +4,6 @@
 #include <string_view>
 
 #include "reflexx/declare.hpp"
-#include "reflexx/util/serializable_number.hpp"
-
-// TODO: Unify number and string serialization with serialize_object? -> Rethink string serialization
 
 namespace reflexx
 {
@@ -165,7 +162,7 @@ protected:
      * ###################################################
      */
 
-    constexpr inline bool is_null() const
+    constexpr inline bool is_null() const 
     noexcept(noexcept(__ctx__->backend_.read_is_null()))
     {
         static_assert(IsReading, "is_null is only callable in Read/Deserialize mode!");

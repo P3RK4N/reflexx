@@ -17,7 +17,7 @@
 #include <type_traits>
 
 #include "c4/yml/parse.hpp"
-#include "reflexx/util/serializable_number.hpp"
+#include "reflexx/util/serializable.hpp"
 
 // TODO: Check if noexcept is applicable here
 

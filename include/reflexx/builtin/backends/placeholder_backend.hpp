@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <span>
 
-#include "reflexx/util/serializable_number.hpp"
+#include "reflexx/util/serializable.hpp"
 
 namespace reflexx::backends {
 

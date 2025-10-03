@@ -6,7 +6,7 @@
 #include <type_traits>
 
 #include "reflexx/policies.hpp"
-#include "reflexx/util/non_serializable_category_type.hpp"
+#include "reflexx/util/serializable.hpp"
 
 namespace reflexx
 {
@@ -95,7 +95,7 @@ requires (std::meta::is_nonstatic_data_member(MemberInfo))
 static constexpr bool should_handle_member_v =
     !ignore_non_serializable_members_v<Settings> ||
     (
-        !util::is_non_serializable_category_type_v<typename[: std::meta::type_of(MemberInfo) :]> &&
+        util::is_serializable_type<typename[: std::meta::type_of(MemberInfo) :]> &&
         !std::is_const_v<typename[: std::meta::type_of(MemberInfo) :]>
     );
 

@@ -12,16 +12,11 @@
 #include "reflexx/type_handler.hpp"
 #include "reflexx/type_handler_list.hpp"
 #include "reflexx/serializer_settings.hpp"
-#include "reflexx/util/non_serializable_category_type.hpp"
 #include "reflexx/util/enum_conv.hpp"
 #include "reflexx/builtin/handlers/default_handler.hpp"
 #include "reflexx/builtin/handlers/std_handler.hpp"
 #include "reflexx/provider.hpp"
-#include "reflexx/util/serializable_enum.hpp"
-#include "reflexx/util/serializable_number.hpp"
-#include "reflexx/util/serializable_char.hpp"
-#include "reflexx/util/serializable_class.hpp"
-#include "reflexx/util/serializable_string.hpp"
+#include "reflexx/util/serializable.hpp"
 
 namespace reflexx
 {
@@ -168,7 +163,7 @@ public:
         result_context ctx_;
     };
 
-    template <typename T>
+    template <util::is_serializable_type T>
     static inline constexpr result<std::string_view> serialize(const T& obj)
     {
         auto res = result<std::string_view>{};
@@ -178,7 +173,7 @@ public:
         return res;
     };
 
-    template <typename T>
+    template <util::is_serializable_type T>
     static inline constexpr result<T&> deserialize(T& obj, std::string_view text)
     {
         auto res = result<T&>(obj, text);
@@ -186,7 +181,7 @@ public:
         return res;
     }
 
-    template <typename T>
+    template <util::is_serializable_type T>
     static inline constexpr result<T> deserialize(std::string_view text)
     {
         auto res = result<T>(text);
@@ -201,31 +196,6 @@ public:
 */
 
 private:
-    template <typename T>
-    static inline constexpr void static_assert_category_type() noexcept
-    {
-        static_assert
-        (
-            !::reflexx::util::is_non_serializable_category_type_v<T>,
-            "\n\n\n"
-            "##########################################################\n"
-            "################## ˇSERIALIZATION ERRORˇ #################\n"
-            "##########################################################\n"
-            "\n\n"
-            "Wide characters, some numbers (e.g. long double),\n"
-            "non owning (raw) pointers, references, member pointers,\n" 
-            "unbounded arrays, functions and unions are not supported\n"
-            "by default. Consider using smart pointers, vectors and variants!\n"
-            "You can also use custom serializers to handle these types.\n"
-            "\n\n"
-            "##########################################################\n"
-            "################## ^SERIALIZATION ERROR^ #################\n"
-            "##########################################################\n"
-            "\n\n\n"
-        );
-    }
-
-private:
     serializer()                                = delete;
     serializer(const serializer&)               = delete;
     serializer(serializer&&)                    = delete;
@@ -234,7 +204,7 @@ private:
 
 /*
     #########################################################################
-    ################### Type categories serializers #########################    
+    ######################### Type serializers ##############################    
     #########################################################################
 */
 
@@ -255,8 +225,7 @@ private:
         ctx.template handler_for<std::remove_cvref_t<T>>().serialize(obj);
     }
 
-    template <typename T>
-    requires std::is_bounded_array_v<std::remove_cvref_t<T>>
+    template <util::is_serializable_array T>
     static inline constexpr void serialize(const T& obj, write_context& ctx)
     noexcept(
         noexcept(ctx.backend_.write_begin_array()) &&
@@ -276,8 +245,7 @@ private:
         ctx.backend_.write_end_array();
     }
 
-    template <typename T>
-    requires std::is_bounded_array_v<std::remove_cvref_t<T>>
+    template <util::is_serializable_array T>
     static inline constexpr void deserialize(T& obj, read_context& ctx)
     noexcept(
         noexcept(ctx.backend_.read_begin_array()) &&
@@ -297,32 +265,28 @@ private:
         ctx.backend_.read_end_array();
     }
 
-    template <typename T>
-    requires std::is_same_v<std::remove_cvref_t<T>, std::nullptr_t>
+    template <util::is_serializable_nullptr T>
     static inline constexpr void serialize(const T&, write_context& ctx)
     noexcept(noexcept(ctx.backend_.write_null()))
     {
         ctx.backend_.write_null();
     }
 
-    template <typename T>
-    requires std::is_same_v<std::remove_cvref_t<T>, std::nullptr_t>
+    template <util::is_serializable_nullptr T>
     static inline constexpr void deserialize(T&, read_context& ctx)
     noexcept(noexcept(ctx.backend_.read_skip()))
     {
         ctx.backend_.read_skip();
     }
 
-    template <typename T>
-    requires std::is_same_v<std::remove_cvref_t<T>, bool>
+    template <util::is_serializable_bool T>
     static inline constexpr void serialize(const T& obj, write_context& ctx)
     noexcept(noexcept(ctx.backend_.write_bool(obj)))
     {
         ctx.backend_.write_bool(obj);
     }
 
-    template <typename T>
-    requires std::is_same_v<std::remove_cvref_t<T>, bool>
+    template <util::is_serializable_bool T>
     static inline constexpr void deserialize(T& obj, read_context& ctx)
     noexcept(noexcept(ctx.backend_.read_bool(obj)))
     {
@@ -409,20 +373,6 @@ private:
     {
         // NOTE: Maybe UB
         serializer::deserialize(reinterpret_cast<std::underlying_type_t<std::remove_cvref_t<T>>&>(obj), ctx);
-    }
-
-    template <typename T>
-    requires util::is_non_serializable_category_type_v<std::remove_cvref_t<T>>
-    static inline constexpr void serialize(const T& obj, write_context& ctx) noexcept
-    {
-        static_assert_category_type<std::remove_cvref_t<T>>();
-    }
-
-    template <typename T>
-    requires util::is_non_serializable_category_type_v<std::remove_cvref_t<T>>
-    static inline constexpr void deserialize(T& obj, read_context& ctx) noexcept
-    {
-        static_assert_category_type<std::remove_cvref_t<T>>();
     }
 };
 

@@ -4,6 +4,7 @@
 #include <meta>
 #include <string_view>
 #include <cassert>
+#include <utility>
 
 #include "reflexx/util/serializable.hpp"
 
@@ -21,6 +22,7 @@ static inline constexpr std::string_view enum_to_string(E value) noexcept
     }
 
     assert(false && "Invalid enum value");
+    std::unreachable();
 }
 
 template <is_serializable_enum E>
@@ -35,6 +37,7 @@ static inline constexpr E string_to_enum(std::string_view name) noexcept
     }
 
     assert(false && "Invalid enum name");
+    std::unreachable();
 }
 
 } // reflexx::util

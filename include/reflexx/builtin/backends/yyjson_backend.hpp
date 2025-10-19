@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <string_view>
+#include <utility>
 #include <vector>
 #include <cstdint>
 #include <cassert>
@@ -32,6 +33,21 @@ public:
         read_stack.reserve(InitialVectorSize);
     }
     
+    inline explicit yyjson_backend(yyjson_backend&& other) noexcept
+    : write_doc        (std::exchange(other.write_doc,    nullptr)),
+      read_doc         (std::exchange(other.read_doc,     nullptr)),
+      write_result     (std::exchange(other.write_result, nullptr)),
+      val_cache        (std::exchange(other.val_cache,    nullptr)),
+      key_cache        (std::move    (other.key_cache            )),
+      write_stack      (std::move    (other.write_stack          )),
+      read_stack       (std::move    (other.read_stack           )),
+      write_result_size(std::move    (other.write_result_size    ))
+    {}
+
+    inline yyjson_backend(const yyjson_backend& other)            = delete;
+    inline yyjson_backend& operator=(const yyjson_backend& other) = delete;
+    inline yyjson_backend& operator=(yyjson_backend&& other)      = delete;
+
     inline ~yyjson_backend() noexcept
     {
         if (write_doc)      yyjson_mut_doc_free(write_doc);
@@ -270,10 +286,10 @@ private:
 
     static constexpr size_t InitialVectorSize = 8;
 
-    yyjson_mut_doc* write_doc = nullptr;
-    yyjson_doc* read_doc = nullptr;
-    const char* write_result = nullptr;
-    std::size_t write_result_size = 0;
+    yyjson_mut_doc* write_doc         = nullptr;
+    yyjson_doc*     read_doc          = nullptr;
+    const char*     write_result      = nullptr;
+    std::size_t     write_result_size = 0;
 
     // to track current container (array/object)
     std::vector<yyjson_mut_val*> write_stack;

@@ -16,7 +16,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "Benchmark",
-            "program": "${workspaceFolder}/bin/tst/Debug/reflexx_benchmark",
+            "program": "${workspaceFolder}/bin/benchmark/Debug/reflexx_benchmark",
             "args": [],
             "cwd": "${workspaceFolder}"
         },

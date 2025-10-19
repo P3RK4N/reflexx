@@ -1,82 +1,7 @@
 #include "citm_catalog.hpp"
-
-#include <concepts>
-#include <yyjson.h>
-#include <cassert>
-
-
-inline void deserialize(std::string& out, yyjson_val* val)
-{
-    out = yyjson_get_str(val);
-}
-
-inline void deserialize(std::string_view& out, yyjson_val* val)
-{
-    out = { yyjson_get_str(val), yyjson_get_len(val) };
-}
-
-template <std::integral T>
-inline void deserialize(T& out, yyjson_val* val)
-    requires std::is_integral_v<T>
-{
-    if constexpr (std::is_signed_v<T>)
-        out = static_cast<T>(yyjson_get_sint(val));
-    else
-        out = static_cast<T>(yyjson_get_uint(val));
-}
-
-template <typename T>
-inline void deserialize(std::vector<T>& out, yyjson_val* arr)
-{
-    out.clear();
-
-    yyjson_arr_iter iter;
-    yyjson_arr_iter_init(arr, &iter);
-
-    yyjson_val* val;
-    while ((val = yyjson_arr_iter_next(&iter)))
-    {
-        T& elem = out.emplace_back();
-        deserialize(elem, val);
-    }
-}
-
-template <typename T>
-inline void deserialize(std::optional<T>& out, yyjson_val* val)
-{
-    if (!val || yyjson_is_null(val))
-    {
-        out.reset();
-        return;
-    }
-
-    T& obj = out.emplace();
-    deserialize(obj, val);
-}
-
-
-template <typename TString, typename T>
-inline void deserialize(std::map<TString, T>& out, yyjson_val* obj)
-{
-    out.clear();
-
-    yyjson_obj_iter iter;
-    yyjson_obj_iter_init(obj, &iter);
-
-    yyjson_val* key;
-    while ((key = yyjson_obj_iter_next(&iter)))
-    {
-        yyjson_val* val = yyjson_obj_iter_get_val(key);
-
-        TString k;
-        deserialize(k, key);
-
-        T t;
-        deserialize(t, val);
-
-        out.emplace(std::move(k), std::move(t));
-    }
-}
+#include "reflexx/builtin/backends/yyjson_backend.hpp"
+#include "yyjson.h"
+#include <memory>
 
 // event<TString>
 template <typename TString>
@@ -92,12 +17,60 @@ inline void deserialize(event<TString>& e, yyjson_val* obj)
     deserialize(e.topicIds, yyjson_obj_get(obj, "topicIds"));
 }
 
+template <typename TString>
+inline void deserialize(event<TString>& e, yyjson_backend& backend)
+{
+    backend.read_begin_object();
+
+    backend.read_key("description");
+    deserialize(e.description, backend);
+
+    backend.read_key("id");
+    deserialize(e.id, backend);
+
+    backend.read_key("logo");
+    deserialize(e.logo, backend);
+
+    backend.read_key("name");
+    deserialize(e.name, backend);
+
+    backend.read_key("subTopicIds");
+    deserialize(e.subTopicIds, backend);
+
+    backend.read_key("subjectCode");
+    deserialize(e.subjectCode, backend);
+
+    backend.read_key("subtitle");
+    deserialize(e.subtitle, backend);
+
+    backend.read_key("topicIds");
+    deserialize(e.topicIds, backend);
+
+    backend.read_end_object();
+}
+
 // price
 inline void deserialize(price& p, yyjson_val* obj)
 {
     deserialize(p.amount, yyjson_obj_get(obj, "amount"));
     deserialize(p.audienceSubCategoryId, yyjson_obj_get(obj, "audienceSubCategoryId"));
     deserialize(p.seatCategoryId, yyjson_obj_get(obj, "seatCategoryId"));
+}
+
+inline void deserialize(price& p, yyjson_backend& backend)
+{
+    backend.read_begin_object();
+
+    backend.read_key("amount");
+    deserialize(p.amount, backend);
+
+    backend.read_key("audienceSubCategoryId");
+    deserialize(p.audienceSubCategoryId, backend);
+
+    backend.read_key("seatCategoryId");
+    deserialize(p.seatCategoryId, backend);
+
+    backend.read_end_object();
 }
 
 // area
@@ -107,11 +80,37 @@ inline void deserialize(area& a, yyjson_val* obj)
     deserialize(a.blockIds, yyjson_obj_get(obj, "blockIds"));
 }
 
+inline void deserialize(area& a, yyjson_backend& backend)
+{
+    backend.read_begin_object();
+
+    backend.read_key("areaId");
+    deserialize(a.areaId, backend);
+
+    backend.read_key("blockIds");
+    deserialize(a.blockIds, backend);
+
+    backend.read_end_object();
+}
+
 // seat_category
 inline void deserialize(seat_category& sc, yyjson_val* obj)
 {
     deserialize(sc.areas, yyjson_obj_get(obj, "areas"));
     deserialize(sc.seatCategoryId, yyjson_obj_get(obj, "seatCategoryId"));
+}
+
+inline void deserialize(seat_category& sc, yyjson_backend& backend)
+{
+    backend.read_begin_object();
+
+    backend.read_key("areas");
+    deserialize(sc.areas, backend);
+
+    backend.read_key("seatCategoryId");
+    deserialize(sc.seatCategoryId, backend);
+
+    backend.read_end_object();
 }
 
 // performance<TString>
@@ -129,15 +128,49 @@ inline void deserialize(performance<TString>& p, yyjson_val* obj)
     deserialize(p.venueCode, yyjson_obj_get(obj, "venueCode"));
 }
 
+template <typename TString>
+inline void deserialize(performance<TString>& p, yyjson_backend& backend)
+{
+    backend.read_begin_object();
+
+    backend.read_key("eventId");
+    deserialize(p.eventId, backend);
+
+    backend.read_key("id");
+    deserialize(p.id, backend);
+
+    backend.read_key("logo");
+    deserialize(p.logo, backend);
+
+    backend.read_key("name");
+    deserialize(p.name, backend);
+
+    backend.read_key("prices");
+    deserialize(p.prices, backend);
+
+    backend.read_key("seatCategories");
+    deserialize(p.seatCategories, backend);
+
+    backend.read_key("seatMapImage");
+    deserialize(p.seatMapImage, backend);
+
+    backend.read_key("start");
+    deserialize(p.start, backend);
+
+    backend.read_key("venueCode");
+    deserialize(p.venueCode, backend);
+
+    backend.read_end_object();
+}
 
 template <typename TString>
-citm_catalog<TString> deserialize_citm_catalog(std::string_view json)
+std::pair<citm_catalog<TString>, yyjson_doc_ptr_t> deserialize_citm_catalog(std::string_view json)
 {
     // Parse JSON
-    yyjson_doc* doc = yyjson_read(json.data(), json.size(), 0);
-    yyjson_val* root = yyjson_doc_get_root(doc);
-
-    citm_catalog<TString> catalog;
+    auto result      = std::pair{ citm_catalog<TString>{}, yyjson_doc_ptr_t{ yyjson_read(json.data(), json.size(), 0) } };
+    auto& catalog    = result.first;
+    auto& doc        = result.second;
+    yyjson_val* root = yyjson_doc_get_root(doc.get());
 
     deserialize(catalog.areaNames, yyjson_obj_get(root, "areaNames"));
     deserialize(catalog.audienceSubCategoryNames, yyjson_obj_get(root, "audienceSubCategoryNames"));
@@ -151,9 +184,66 @@ citm_catalog<TString> deserialize_citm_catalog(std::string_view json)
     deserialize(catalog.topicSubTopics, yyjson_obj_get(root, "topicSubTopics"));
     deserialize(catalog.venueNames, yyjson_obj_get(root, "venueNames"));
 
-    yyjson_doc_free(doc);
-    return catalog;
+    return result;
 }
 
-template citm_catalog<std::string> deserialize_citm_catalog<std::string>(std::string_view json);
-template citm_catalog<std::string_view> deserialize_citm_catalog<std::string_view>(std::string_view json);
+template <typename TString>
+std::pair<citm_catalog<TString>, yyjson_backend> backend_deserialize_citm_catalog(std::string_view json)
+{
+    auto result = std::pair{ citm_catalog<TString>{}, yyjson_backend{ json } };
+    auto& catalog = result.first;
+    auto& backend = result.second;
+
+    backend.read_begin_object();
+
+    backend.read_key("areaNames");
+    deserialize(catalog.areaNames, backend);
+
+    backend.read_key("audienceSubCategoryNames");
+    deserialize(catalog.audienceSubCategoryNames, backend);
+
+    backend.read_key("blockNames");
+    deserialize(catalog.blockNames, backend);
+
+    backend.read_key("events");
+    deserialize(catalog.events, backend);
+
+    backend.read_key("performances");
+    deserialize(catalog.performances, backend);
+
+    backend.read_key("seatCategoryNames");
+    deserialize(catalog.seatCategoryNames, backend);
+
+    backend.read_key("subTopicNames");
+    deserialize(catalog.subTopicNames, backend);
+
+    backend.read_key("subjectNames");
+    deserialize(catalog.subjectNames, backend);
+
+    backend.read_key("topicNames");
+    deserialize(catalog.topicNames, backend);
+
+    backend.read_key("topicSubTopics");
+    deserialize(catalog.topicSubTopics, backend);
+
+    backend.read_key("venueNames");
+    deserialize(catalog.venueNames, backend);
+
+    backend.read_end_object();
+
+    return result;
+}
+
+// -------------------- normal deserialize with yyjson_doc --------------------
+template std::pair<citm_catalog<std::string>, yyjson_doc_ptr_t>      
+deserialize_citm_catalog<std::string>(std::string_view json);
+
+template std::pair<citm_catalog<std::string_view>, yyjson_doc_ptr_t> 
+deserialize_citm_catalog<std::string_view>(std::string_view json);
+
+// -------------------- backend-based deserialize --------------------
+template std::pair<citm_catalog<std::string>, yyjson_backend>      
+backend_deserialize_citm_catalog<std::string>(std::string_view json);
+
+template std::pair<citm_catalog<std::string_view>, yyjson_backend> 
+backend_deserialize_citm_catalog<std::string_view>(std::string_view json);

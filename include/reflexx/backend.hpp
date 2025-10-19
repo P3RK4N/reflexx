@@ -15,7 +15,7 @@ namespace reflexx {
 template <typename T>
 concept IsBackendType =
     std::is_move_constructible_v<T> &&
-    std::is_move_assignable_v<T> && 
+    // std::is_move_assignable_v<T> && 
     requires
     (
         T backend,

@@ -21,6 +21,7 @@
 
 using namespace reflexx;
 using relaxed_serializer = serializer<serializer_settings::Relaxed(), backends::yyjson_backend>;
+using strict_serializer = serializer<serializer_settings::Strict(), backends::yyjson_backend>;
 
 inline std::string reflexx_load(const char* path)
 {

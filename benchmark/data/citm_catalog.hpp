@@ -1,9 +1,7 @@
 #ifndef REFLEXX_CITM_CATALOG_HPP
 #define REFLEXX_CITM_CATALOG_HPP
 
-#include <map>
-#include <vector>
-#include <string_view>
+#include "data_util.hpp"
 
 static constexpr auto CITM_CATALOG_FILEPATH = PROJECT_ROOT "/benchmark/data/citm_catalog.json";
 
@@ -71,7 +69,20 @@ struct citm_catalog
     SSMap venueNames;
 };
 
+struct yyjson_doc_deleter
+{
+    void operator()(yyjson_doc* ptr) const noexcept
+    {
+        yyjson_doc_free(ptr);
+    }
+};
+
+using yyjson_doc_ptr_t = std::unique_ptr<yyjson_doc, yyjson_doc_deleter>;
+
 template <typename TString>
-citm_catalog<TString> deserialize_citm_catalog(std::string_view json);
+std::pair<citm_catalog<TString>, yyjson_doc_ptr_t> deserialize_citm_catalog(std::string_view json);
+
+template <typename TString>
+std::pair<citm_catalog<TString>, yyjson_backend> backend_deserialize_citm_catalog(std::string_view json);
 
 #endif

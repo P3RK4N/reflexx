@@ -33,7 +33,6 @@ class serializer final
     template <IsSerializer TSerializer, bool IsReading>
     friend class type_handler;
 
-    // TODO: Test access to this
     template <bool IsReading>
     struct serializer_context final
     {
@@ -107,7 +106,7 @@ public:
 
     // TODO: Test access
     // TODO: Merge with context, there is no need for 2 internal structs, or is there?
-    template <typename T>
+    template <typename T, bool IsReading>
     class result
     {
         friend serializer;
@@ -135,57 +134,54 @@ public:
         
     private:
         // In-place read
-        result(T res, std::string_view input) requires std::is_reference_v<T>
-        : res_(res), ctx_(std::in_place_type<read_context>, input) {}
+        result(T res, std::string_view input) requires std::is_reference_v<T> && IsReading
+        : res_(res), ctx_(input) {}
         
         // Return val read
-        result(std::string_view input)
-        : res_(provider<T>{}()), ctx_(std::in_place_type<read_context>, input) {}
+        result(std::string_view input) requires IsReading
+        : res_(provider<T>{}()), ctx_(input) {}
 
         // Return val write
-        result()
-        : res_(), ctx_(std::in_place_type<write_context>) {}
+        result() requires (!IsReading)
+        : res_(), ctx_() {}
 
-        template <bool IsReading>
         auto& context()
         {
-            if constexpr (IsReading)
-            {
-                return std::get<read_context>(ctx_);
-            }
-            else
-            {
-                return std::get<write_context>(ctx_);
-            }
+            return ctx_;
         }
 
         T res_;
-        result_context ctx_;
+        serializer_context<IsReading> ctx_;
     };
 
+    template <typename T>
+    using read_result = result<T, Read>;
+
+    template <typename T>
+    using write_result = result<T, Write>;
+
     template <util::is_serializable_type T>
-    static inline constexpr result<std::string_view> serialize(const T& obj)
+    static inline constexpr write_result<std::string_view> serialize(const T& obj)
     {
-        auto res = result<std::string_view>{};
-        auto& ctx = res.template context<Write>();
-        serialize(obj, ctx);
-        *res = ctx.backend_.get();
+        auto res = write_result<std::string_view>{};
+        serialize(obj, res.ctx_);
+        *res = res.ctx_.backend_.get();
         return res;
     };
 
     template <util::is_serializable_type T>
-    static inline constexpr result<T&> deserialize(T& obj, std::string_view text)
+    static inline constexpr read_result<T&> deserialize(T& obj, std::string_view text)
     {
-        auto res = result<T&>(obj, text);
-        deserialize(*res, res.template context<Read>());
+        auto res = read_result<T&>(obj, text);
+        deserialize(*res, res.ctx_);
         return res;
     }
 
     template <util::is_serializable_type T>
-    static inline constexpr result<T> deserialize(std::string_view text)
+    static inline constexpr read_result<T> deserialize(std::string_view text)
     {
-        auto res = result<T>(text);
-        deserialize(*res, res.template context<Read>());
+        auto res = read_result<T>(text);
+        deserialize(*res, res.ctx_);
         return res;
     }
 

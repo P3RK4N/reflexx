@@ -22,7 +22,7 @@ if (NOT TARGET glaze)
     )
 endif()
 
-add_executable(reflexx_benchmark benchmark.cpp data/citm_catalog.cpp)
+add_executable(reflexx_benchmark benchmark.cpp data/citm_catalog.cpp data/profiles.cpp)
 
 set_target_properties(
     reflexx_benchmark 

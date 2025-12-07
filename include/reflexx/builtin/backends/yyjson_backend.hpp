@@ -11,6 +11,7 @@
 
 #include <yyjson.h>
 
+#include "reflexx/backend.hpp"
 #include "reflexx/util/serializable.hpp"
 
 namespace reflexx::backends {
@@ -152,13 +153,6 @@ public:
         }
         return true;
     }
-
-    inline std::string_view read_key() noexcept
-    {
-        auto key = yyjson_obj_iter_next(&read_stack.back().iter.obj_iter);
-        val_cache = yyjson_obj_iter_get_val(key);
-        return { unsafe_yyjson_get_str(key), unsafe_yyjson_get_len(key) };
-    }
     
     inline void read_begin_array()
     {
@@ -242,6 +236,20 @@ public:
         return unsafe_yyjson_is_arr(read_stack.back().val) ?
             yyjson_arr_iter_has_next(&read_stack.back().iter.arr_iter) :
             yyjson_obj_iter_has_next(&read_stack.back().iter.obj_iter);
+    }
+
+    inline void read_obj_foreach(IsKeyCallback auto&& onKey)
+    noexcept(noexcept(onKey(std::declval<std::string_view>())))
+    {
+        scoped_val_cacher _ { this };
+
+        auto obj_iter = yyjson_obj_iter_with(val_cache);
+        while (yyjson_obj_iter_has_next(&obj_iter))
+        {
+            auto curr_key = yyjson_obj_iter_next(&obj_iter);
+            val_cache = yyjson_obj_iter_get_val(curr_key);
+            onKey(std::string_view{ unsafe_yyjson_get_str(curr_key), unsafe_yyjson_get_len(curr_key) });
+        }
     }
 
 private:

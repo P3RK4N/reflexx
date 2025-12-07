@@ -142,7 +142,7 @@ constexpr serializer_settings serializer_settings_matrix[] =
 
 using backends_list = std::tuple
 <
-    yyjson_backend, 
+    yyjson_backend,
     ryml_backend
 >;
 

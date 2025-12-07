@@ -382,32 +382,27 @@ struct std_handler : type_handler<TSerializer, IsReading>
         using K = typename TMap::key_type;
         using V = typename TMap::mapped_type;
 
-        this->begin_object();
-
         if constexpr (IsReading)
         {
             map.clear();
-
-            while (this->has_next())
+            
+            this->obj_foreach([&](auto&& key)
             {
                 V v = provider<V>{}();
-
-                std::string_view k = this->key();
                 this->serialize_object(v);
-
-                map.emplace(k, std::move(v));
-            }
+                map.emplace(std::move(key), std::move(v));
+            });
         }
         else
         {
+            this->begin_object();
             for (const auto& [key, value] : map)
             {
                 this->key(key);
                 this->serialize_object(value);
             }
+            this->end_object();
         }
-
-        this->end_object();
     }    
 
     template <typename TSet>

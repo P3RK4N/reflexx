@@ -17,6 +17,7 @@
 #include <type_traits>
 
 #include "c4/yml/parse.hpp"
+#include "reflexx/backend.hpp"
 #include "reflexx/util/serializable.hpp"
 
 // TODO: Check if noexcept is applicable here
@@ -128,13 +129,6 @@ public:
         }
         return true;
     }
-
-    inline std::string_view read_key()
-    {
-        current_node = *read_stack.back().iter;
-        ++read_stack.back().iter;
-        return to_string_view(current_node.key());
-    }
     
     inline void read_begin_array()
     {
@@ -203,6 +197,20 @@ public:
     inline bool read_has_next()
     {
         return read_stack.back().iter != read_stack.back().val.end();
+    }
+
+    inline void read_obj_foreach(IsKeyCallback auto&& onKey)
+    {
+        scoped_node_cacher _ { this };
+
+        auto obj_iter = current_node.begin();
+        auto end_iter = current_node.end();
+        while (obj_iter != end_iter)
+        {
+            current_node = *obj_iter;
+            ++obj_iter;
+            onKey(to_string_view(current_node.key()));
+        }
     }
 
 private:

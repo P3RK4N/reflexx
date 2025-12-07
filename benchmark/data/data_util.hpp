@@ -146,15 +146,12 @@ inline void deserialize(std::map<TString, T>& out, yyjson_backend& backend)
 {
     out.clear();
 
-    backend.read_begin_object();
-    while (backend.read_has_next())
+    backend.read_obj_foreach([&](auto&& key)
     {
-        TString key { backend.read_key() };
         T value;
         deserialize(value, backend);
         out.emplace(std::move(key), std::move(value));
-    }
-    backend.read_end_object();
+    });
 }
 
 #endif

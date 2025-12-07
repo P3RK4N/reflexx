@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <span>
 
+#include "reflexx/backend.hpp"
 #include "reflexx/util/serializable.hpp"
 
 namespace reflexx::backends {
@@ -21,32 +22,32 @@ struct placeholder_backend
 
     template <typename T>
     requires util::is_serializable_number_v<T>
-    inline constexpr void              write_number(T)                      {               }
-    inline constexpr void              write_key(std::string_view)          {               }
-    inline constexpr void              write_begin_array()                  {               }
-    inline constexpr void              write_end_array()                    {               }
-    inline constexpr void              write_begin_object()                 {               }
-    inline constexpr void              write_end_object()                   {               }
-    inline constexpr void              write_char(char)                     {               }
-    inline constexpr void              write_bool(bool)                     {               }
-    inline constexpr void              write_string(std::string_view)       {               }
-    inline constexpr void              write_null()                         {               }
+    inline constexpr void              write_number(T)                          {               }
+    inline constexpr void              write_key(std::string_view)              {               }
+    inline constexpr void              write_begin_array()                      {               }
+    inline constexpr void              write_end_array()                        {               }
+    inline constexpr void              write_begin_object()                     {               }
+    inline constexpr void              write_end_object()                       {               }
+    inline constexpr void              write_char(char)                         {               }
+    inline constexpr void              write_bool(bool)                         {               }
+    inline constexpr void              write_string(std::string_view)           {               }
+    inline constexpr void              write_null()                             {               }
 
     template <typename T>
     requires util::is_serializable_number_v<T>
-    inline constexpr void              read_number(T&)                      {               }
-    inline constexpr bool              read_key(std::string_view)           { return true;  }
-    inline constexpr std::string_view  read_key()                           { return {};    }
-    inline constexpr void              read_begin_array()                   {               }
-    inline constexpr void              read_end_array()                     {               }
-    inline constexpr void              read_begin_object()                  {               }
-    inline constexpr void              read_end_object()                    {               }
-    inline constexpr void              read_char(char&)                     {               }
-    inline constexpr void              read_bool(bool&)                     {               }
-    inline constexpr std::string_view  read_string()                        { return "";    }
-    inline constexpr bool              read_is_null()                       { return false; }
-    inline constexpr void              read_skip()                          {               }
-    inline constexpr bool              read_has_next()                      { return false; }
+    inline constexpr void              read_number(T&)                          {               }
+    inline constexpr bool              read_key(std::string_view)               { return true;  }
+    inline constexpr void              read_begin_array()                       {               }
+    inline constexpr void              read_end_array()                         {               }
+    inline constexpr void              read_begin_object()                      {               }
+    inline constexpr void              read_end_object()                        {               }
+    inline constexpr void              read_char(char&)                         {               }
+    inline constexpr void              read_bool(bool&)                         {               }
+    inline constexpr std::string_view  read_string()                            { return "";    }
+    inline constexpr bool              read_is_null()                           { return false; }
+    inline constexpr void              read_skip()                              {               }
+    inline constexpr bool              read_has_next()                          { return false; }
+    inline constexpr void              read_obj_foreach(IsKeyCallback auto&&)   {               }
 };
 
 } // reflexx::backends

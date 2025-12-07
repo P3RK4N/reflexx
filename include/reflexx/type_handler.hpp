@@ -188,6 +188,13 @@ protected:
         return __ctx__->backend_.read_has_next();
     }
 
+    inline constexpr void arr_foreach(IsValueCallback auto&& f) const
+    noexcept(noexcept(__ctx__->backend_.read_arr_foreach(std::forward<decltype(f)>(f))))
+    {
+        static_assert(IsReading, "arr_foreach is only callable in Read/Deserialize mode!");
+        __ctx__->backend_.read_arr_foreach(std::forward<decltype(f)>(f));
+    }
+
     inline constexpr void obj_foreach(IsKeyCallback auto&& f) const
     noexcept(noexcept(__ctx__->backend_.read_obj_foreach(std::forward<decltype(f)>(f))))
     {

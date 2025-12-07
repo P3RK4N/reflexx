@@ -182,102 +182,96 @@ struct std_handler : type_handler<TSerializer, IsReading>
     template <typename T, typename Alloc>
     inline constexpr void serialize(std::vector<T, Alloc>& vec) const
     {
-        this->begin_array();
-
+        
         if constexpr (IsReading)
         {
-            vec.clear();
-            while (this->has_next())
+            vec.clear();            
+            this->arr_foreach([&]()
             {
                 vec.emplace_back(provider<T>{}());
-                this->serialize_object(vec.back());
-            }
+                this->serialize_object(vec.back());    
+            });
         }
         else
         {
+            this->begin_array();
             for (const auto& elem : vec)
             {
                 this->serialize_object(elem);
             }
+            this->end_array();
         }
-
-        this->end_array();
     }
 
     template <typename T, typename Alloc>
     inline constexpr void serialize(std::deque<T, Alloc>& deq) const
     {
-        this->begin_array();
-
         if constexpr (IsReading)
         {
             deq.clear();
-            while (this->has_next())
+            this->arr_foreach([&]()
             {
                 deq.emplace_back(provider<T>{}());
-                this->serialize_object(deq.back());
-            }
+                this->serialize_object(deq.back());    
+            });
         }
         else
         {
+            this->begin_array();
             for (const auto& elem : deq)
             {
                 this->serialize_object(elem);
             }
+            this->end_array();
         }
-
-        this->end_array();
     }
 
     template <typename T, typename Alloc>
     inline constexpr void serialize(std::list<T, Alloc>& lst) const
     {
-        this->begin_array();
-
         if constexpr (IsReading)
         {
             lst.clear();
-            while (this->has_next())
+            this->arr_foreach([&]()
             {
                 lst.emplace_back(provider<T>{}());
-                this->serialize_object(lst.back());
-            }
+                this->serialize_object(lst.back());                
+            });
         }
         else
         {
+            this->begin_array();
             for (const auto& elem : lst)
             {
                 this->serialize_object(elem);
             }
+            this->end_array();
         }
 
-        this->end_array();
     }
 
     template <typename T, typename Alloc>
     inline constexpr void serialize(std::forward_list<T, Alloc>& flst) const
     {
-        this->begin_array();
-
         if constexpr (IsReading)
         {
             flst.clear();
             auto insert_pos = flst.before_begin();
-            while (this->has_next())
+            this->arr_foreach([&]()
             {
                 insert_pos = flst.emplace_after(insert_pos, provider<T>{}());
-                this->serialize_object(*insert_pos);
-            }
+                this->serialize_object(*insert_pos);                
+            });
         }
         else
         {
+            this->begin_array();
             for (const auto& elem : flst)
             {
                 this->serialize_object(elem);
             }
+            this->end_array();
         }
-
-        this->end_array();
     }
 
     template <typename T, std::size_t N>
@@ -346,33 +340,32 @@ struct std_handler : type_handler<TSerializer, IsReading>
         using K = typename TMap::key_type;
         using V = typename TMap::mapped_type;
 
-        this->begin_array();
-
         if constexpr (IsReading)
         {
             map.clear();
-            while (this->has_next())
+            this->arr_foreach([&]()
             {
                 K k = provider<K>{}();
                 V v = provider<V>{}();
-
+                
                 this->begin_array();
-                    this->serialize_object(k);
-                    this->serialize_object(v);
+                this->serialize_object(k);
+                this->serialize_object(v);
                 this->end_array();
-
+                
                 map.emplace(std::move(k), std::move(v));
-            }
+                
+            });
         }
         else
         {
+            this->begin_array();
             for (const auto& entry : map)
             {
                 this->serialize_object(entry);
             }
+            this->end_array();
         }
-
-        this->end_array();
     }
 
     template <typename TMap>
@@ -410,27 +403,25 @@ struct std_handler : type_handler<TSerializer, IsReading>
     {
         using T = typename TSet::value_type;
 
-        this->begin_array();
-
         if constexpr (IsReading)
         {
             set.clear();
-            while (this->has_next())
+            this->arr_foreach([&]()
             {
                 T value = provider<T>{}();
                 this->serialize_object(value);
-                set.emplace(std::move(value));
-            }
+                set.emplace(std::move(value));                
+            });
         }
         else
         {
+            this->begin_array();
             for (const auto& value : set)
             {
                 this->serialize_object(value);
             }
+            this->end_array();
         }
-
-        this->end_array();
     }
 };
 

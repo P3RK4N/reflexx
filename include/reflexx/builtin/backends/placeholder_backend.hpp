@@ -47,6 +47,7 @@ struct placeholder_backend
     inline constexpr bool              read_is_null()                           { return false; }
     inline constexpr void              read_skip()                              {               }
     inline constexpr bool              read_has_next()                          { return false; }
+    inline constexpr void              read_arr_foreach(IsValueCallback auto&&) {               }
     inline constexpr void              read_obj_foreach(IsKeyCallback auto&&)   {               }
 };
 

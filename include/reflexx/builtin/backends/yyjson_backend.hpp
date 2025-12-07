@@ -238,6 +238,18 @@ public:
             yyjson_obj_iter_has_next(&read_stack.back().iter.obj_iter);
     }
 
+    inline void read_arr_foreach(IsValueCallback auto&& onValue)
+    {
+        scoped_val_cacher _ { this };
+
+        auto arr_iter = yyjson_arr_iter_with(val_cache);
+        while (yyjson_arr_iter_has_next(&arr_iter))
+        {
+            val_cache = yyjson_arr_iter_next(&arr_iter);
+            onValue();
+        }
+    }
+
     inline void read_obj_foreach(IsKeyCallback auto&& onKey)
     noexcept(noexcept(onKey(std::declval<std::string_view>())))
     {

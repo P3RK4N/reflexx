@@ -15,6 +15,12 @@ namespace reflexx {
 // TODO: Split backend into Read/Write/Modify?
 
 template <typename T>
+concept IsValueCallback = requires(T&& callback)
+{
+    { callback() } -> std::same_as<void>;
+};
+
+template <typename T>
 concept IsKeyCallback = requires(T&& callback, const std::string_view& key)
 {
     { callback(key) } -> std::same_as<void>;
@@ -26,6 +32,7 @@ concept IsBackendType = std::is_move_constructible_v<T> && requires
     T backend,
     
     // Callbacks
+    decltype([](){}) value_callback,
     decltype([](const std::string_view&){}) key_callback,
 
     // For read input
@@ -118,7 +125,8 @@ concept IsBackendType = std::is_move_constructible_v<T> && requires
     { backend.read_is_null()                    } -> std::same_as<bool>;
     { backend.read_skip()                       } -> std::same_as<void>;
     { backend.read_has_next()                   } -> std::same_as<bool>;
-    // TODO: Improve restriction with concept
+    // TODO: Improve restriction with following concepts
+    { backend.read_arr_foreach(value_callback)  } -> std::same_as<void>;
     { backend.read_obj_foreach(key_callback)    } -> std::same_as<void>;
 };
 

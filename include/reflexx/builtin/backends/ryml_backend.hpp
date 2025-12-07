@@ -199,6 +199,20 @@ public:
         return read_stack.back().iter != read_stack.back().val.end();
     }
 
+    inline void read_arr_foreach(IsValueCallback auto&& onValue)
+    {
+        scoped_node_cacher _ { this };
+
+        auto arr_iter = current_node.begin();
+        auto end_iter = current_node.end();
+        while (arr_iter != end_iter)
+        {
+            current_node = *arr_iter;
+            ++arr_iter;
+            onValue();
+        }
+    }
+
     inline void read_obj_foreach(IsKeyCallback auto&& onKey)
     {
         scoped_node_cacher _ { this };

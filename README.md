@@ -52,7 +52,7 @@ CITM catalog (1.73 MB), deserialize:
 | Glaze | 4,451 | +8% |
 | Glaze (zero-copy) | 4,349 | +6% |
 | **Reflexx serializer (yyjson backend)** | **4,700** | **+14%** |
-| **Reflexx serializer (yyjson backend, zero-copy)** | **4,596** | **+12%** |
+| **=> Reflexx serializer (yyjson backend, zero-copy)** | **4,596** | **+12%** |
 | Reflexx backend only (manual walk) | 4,771 | +16% |
 | Reflexx backend only (manual walk, zero-copy) | 4,673 | +14% |
 | reflect-cpp | 7,562 | +84% |
@@ -68,7 +68,7 @@ Profiles (5.1 MB), deserialize:
 | Glaze | 17,701 | +6% |
 | Glaze (zero-copy) | 9,483 | -43% |
 | **Reflexx serializer (yyjson backend)** | **14,002** | **-16%** |
-| **Reflexx serializer (yyjson backend, zero-copy)** | **8,371** | **-50%** |
+| **=> Reflexx serializer (yyjson backend, zero-copy)** | **8,371** | **-50%** |
 | reflect-cpp | 26,474 | +58% |
 
 **On Profiles, Reflexx is **21% faster than Glaze** and **47% faster than reflect-cpp** on the owning-string path.**

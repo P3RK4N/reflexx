@@ -43,7 +43,7 @@ Release / O3, Celero, 30 samples, x86_64 Linux (emulated on ARM — read the rat
 - **Reflexx serializer:** reflected walk through the same pluggable backend.
 - **Zero-copy:** views point into the input buffer, which must outlive the result.
 
-CITM catalog (1.73 MB), deserialize:
+benchmark/data/citm_catalog.json (1.73 MB), deserialize:
 
 | Path | µs | vs raw yyjson |
 |---|---:|---:|
@@ -59,7 +59,7 @@ CITM catalog (1.73 MB), deserialize:
 
 **Reflexx lands ~1.5% **faster** than the handwritten traversal on the same backend: the reflection layer costs nothing, the backend is the only real cost.**
 
-Profiles (5.1 MB), deserialize:
+benchmark/data/profiles.json (5.1 MB), deserialize:
 
 | Path | µs | vs raw yyjson |
 |---|---:|---:|

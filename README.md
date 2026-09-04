@@ -8,8 +8,6 @@ Swap the output format — or the whole target — without touching your types.
 
 Built in 2025 on Bloomberg’s experimental P2996 Clang, before reflection shipped in real compilers.
 
-Private WIP, paused due to lack of time.
-
 ---
 
 ## Use it

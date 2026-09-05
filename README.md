@@ -28,7 +28,7 @@ Player back = S::deserialize<Player>(json);   // parse into a new Player
 S::deserialize(p, json);                      // or parse in-place
 ```
 
-That is the whole API: `serialize`, `deserialize`. No macros, no `REGISTER(...)`, no describing your fields twice.
+That is the whole API.
 
 ## Numbers
 
@@ -37,7 +37,7 @@ Release / O3, Celero, 30 samples, x86_64 Linux (emulated on ARM — read the rat
 **Benchmark glossary**
 
 - **Raw yyjson:** manual walk, direct JSON parser calls.
-- **Backend only:** manual walk through the Reflexx backend adapter.
+- **Backend only:** manual walk through the Reflexx's JSON backend adapter.
 - **Reflexx serializer:** reflected walk through the same pluggable backend.
 - **Zero-copy:** views point into the input buffer, which must outlive the result.
 
@@ -49,10 +49,10 @@ benchmark/data/citm_catalog.json (1.73 MB), deserialize:
 | Raw yyjson (manual, zero-copy) | 3,987 | -3% |
 | Glaze | 4,451 | +8% |
 | Glaze (zero-copy) | 4,349 | +6% |
-| **Reflexx serializer (yyjson backend)** | **4,700** | **+14%** |
-| **=> Reflexx serializer (yyjson backend, zero-copy)** | **4,596** | **+12%** |
-| Reflexx backend only (manual walk) | 4,771 | +16% |
-| Reflexx backend only (manual walk, zero-copy) | 4,673 | +14% |
+| **Reflexx serializer (JSON backend)** | **4,700** | **+14%** |
+| **=> Reflexx serializer (JSON backend, zero-copy)** | **4,596** | **+12%** |
+| JSON backend only (manual walk) | 4,771 | +16% |
+| JSON backend only (manual walk, zero-copy) | 4,673 | +14% |
 | reflect-cpp | 7,562 | +84% |
 
 **Reflexx lands ~1.5% **faster** than the handwritten traversal on the same backend: the reflection layer costs nothing, the backend is the only real cost.**
@@ -82,7 +82,7 @@ template <serializer_settings Settings, IsBackendType Backend, IsTypeHandlerList
 class serializer;
 ```
 
-`relaxed_serializer` and `strict_serializer` are presets.
+`relaxed_serializer` and `strict_serializer` are built-in presets.
 
 When you want your own, start from a preset and override one knob. Settings are `consteval`, so this is all resolved at compile time:
 
@@ -135,7 +135,8 @@ Plug it in front of the defaults. Reflexx uses the first handler that matches a 
 
 ```cpp
 using Handlers = type_handler_list<vec2_handler, std_handler, default_handler>;
-using S = serializer<serializer_settings::Relaxed(), backends::yyjson_backend, Handlers>;
+
+using S = serializer<settings, backend, Handlers>;
 
 S::serialize(Sprite{ "hero.png", { 4, 2 } });
 // {"texture":"hero.png","position":[4,2]}
